@@ -1,0 +1,1217 @@
+Deep Dive into Flutter Provider Package
+I'll explain the Provider package comprehensively with detailed examples to help you understand state management in Flutter.
+What is Provider?
+Provider is a wrapper around InheritedWidget that simplifies state management in Flutter applications. It makes sharing data across the widget tree easier and more efficient than manually implementing InheritedWidget.
+Core Concepts
+1. Creating and Exposing Values
+Using the create Constructor (For New Objects)
+When you want to create a new object instance, always use the create parameter:
+dart// ✅ CORRECT - Creating a new object
+ChangeNotifierProvider(
+  create: (context) => Counter(),
+  child: MyApp(),
+)
+Why? The create callback ensures proper lifecycle management - the provider will automatically dispose of the object when it's no longer needed.
+dart// ❌ WRONG - Don't use .value for new objects
+ChangeNotifierProvider.value(
+  value: Counter(), // This creates disposal issues!
+  child: MyApp(),
+)
+Using the .value Constructor (For Existing Objects)
+When you have an existing object you want to share:
+dart// ✅ CORRECT - Reusing an existing object
+Counter myCounter = Counter();
+
+ChangeNotifierProvider.value(
+  value: myCounter,
+  child: MyApp(),
+)
+2. Reading Values - Three Main Methods
+Method 1: context.watch<T>() - Listen to Changes
+Makes the widget rebuild when the value changes:
+dartclass CounterDisplay extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Widget rebuilds whenever Counter changes
+    final counter = context.watch<Counter>();
+    return Text('Count: ${counter.count}');
+  }
+}
+Method 2: context.read<T>() - One-Time Access
+Gets the value WITHOUT listening to changes:
+dartclass IncrementButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {
+        // Just call a method, don't rebuild when counter changes
+        context.read<Counter>().increment();
+      },
+      child: Text('Increment'),
+    );
+  }
+}
+Important: context.read() cannot be called inside build() if you need the value for rendering.
+Method 3: context.select<T, R>() - Selective Listening
+Listen to only specific properties:
+dartclass Person {
+  String name;
+  int age;
+  String address;
+}
+
+class NameDisplay extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Only rebuilds when name changes, not age or address
+    final name = context.select<Person, String>((person) => person.name);
+    return Text('Name: $name');
+  }
+}
+
+Complete Example: Counter App
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+// 1. MODEL - The data class with ChangeNotifier
+class Counter with ChangeNotifier {
+  int _count = 0;
+  
+  int get count => _count;
+  
+  void increment() {
+    _count++;
+    notifyListeners(); // This triggers rebuilds
+  }
+  
+  void decrement() {
+    _count--;
+    notifyListeners();
+  }
+  
+  void reset() {
+    _count = 0;
+    notifyListeners();
+  }
+}
+
+// 2. MAIN APP - Setting up the Provider
+void main() {
+  runApp(
+    // Wrap your app with the provider
+    ChangeNotifierProvider(
+      create: (context) => Counter(),
+      child: MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Provider Demo',
+      home: CounterPage(),
+    );
+  }
+}
+
+// 3. UI - Consuming the Provider
+class CounterPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Counter with Provider')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Using context.watch - rebuilds when counter changes
+            Text('Count:', style: TextStyle(fontSize: 20)),
+            Consumer<Counter>(
+              builder: (context, counter, child) {
+                return Text(
+                  '${counter.count}',
+                  style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+                );
+              },
+            ),
+            
+            SizedBox(height: 30),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Using context.read - doesn't rebuild this button
+                ElevatedButton(
+                  onPressed: () => context.read<Counter>().decrement(),
+                  child: Icon(Icons.remove),
+                ),
+                
+                SizedBox(width: 20),
+                
+                ElevatedButton(
+                  onPressed: () => context.read<Counter>().increment(),
+                  child: Icon(Icons.add),
+                ),
+              ],
+            ),
+            
+            SizedBox(height: 20),
+            
+            TextButton(
+              onPressed: () => context.read<Counter>().reset(),
+              child: Text('Reset'),
+            ),
+            
+            SizedBox(height: 40),
+            
+            // Another widget showing selective listening
+            EvenOddDisplay(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Widget that only rebuilds when even/odd status changes
+class EvenOddDisplay extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Only rebuilds when the even/odd state changes
+    final isEven = context.select<Counter, bool>(
+      (counter) => counter.count % 2 == 0,
+    );
+    
+    return Container(
+      padding: EdgeInsets.all(16),
+      color: isEven ? Colors.green[100] : Colors.orange[100],
+      child: Text(
+        isEven ? 'EVEN' : 'ODD',
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
+
+
+Advanced Features
+3. MultiProvider - Managing Multiple Providers
+Instead of nesting providers:
+dart// ❌ Nested (hard to read)
+Provider<UserService>(
+  create: (_) => UserService(),
+  child: Provider<AuthService>(
+    create: (_) => AuthService(),
+    child: Provider<DatabaseService>(
+      create: (_) => DatabaseService(),
+      child: MyApp(),
+    ),
+  ),
+)
+
+// ✅ Clean with MultiProvider
+MultiProvider(
+  providers: [
+    Provider<UserService>(create: (_) => UserService()),
+    Provider<AuthService>(create: (_) => AuthService()),
+    Provider<DatabaseService>(create: (_) => DatabaseService()),
+  ],
+  child: MyApp(),
+)
+4. ProxyProvider - Combining Multiple Providers
+When one provider depends on another:
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+// MODEL 1: User Authentication
+class Auth with ChangeNotifier {
+  String? _userId;
+  
+  String? get userId => _userId;
+  bool get isAuthenticated => _userId != null;
+  
+  void login(String userId) {
+    _userId = userId;
+    notifyListeners();
+  }
+  
+  void logout() {
+    _userId = null;
+    notifyListeners();
+  }
+}
+
+// MODEL 2: User Profile (depends on Auth)
+class UserProfile {
+  final String? userId;
+  final String displayName;
+  final int points;
+  
+  UserProfile(this.userId)
+      : displayName = userId != null ? 'User $userId' : 'Guest',
+        points = userId != null ? 100 : 0;
+  
+  String get welcomeMessage => 
+      'Welcome, $displayName! You have $points points.';
+}
+
+// MODEL 3: Shopping Cart (depends on both Auth and UserProfile)
+class ShoppingCart {
+  final Auth auth;
+  final UserProfile profile;
+  final List<String> _items = [];
+  
+  ShoppingCart(this.auth, this.profile);
+  
+  List<String> get items => _items;
+  int get itemCount => _items.length;
+  
+  void addItem(String item) {
+    if (auth.isAuthenticated) {
+      _items.add(item);
+    }
+  }
+  
+  void clear() => _items.clear();
+  
+  String get summary => 
+      '${profile.displayName} has ${itemCount} items in cart';
+}
+
+void main() {
+  runApp(
+    MultiProvider(
+      providers: [
+        // Base provider
+        ChangeNotifierProvider(
+          create: (_) => Auth(),
+        ),
+        
+        // ProxyProvider - depends on Auth
+        ProxyProvider<Auth, UserProfile>(
+          update: (context, auth, previousProfile) {
+            // Rebuilds UserProfile whenever Auth changes
+            return UserProfile(auth.userId);
+          },
+        ),
+        
+        // ProxyProvider2 - depends on Auth AND UserProfile
+        ProxyProvider2<Auth, UserProfile, ShoppingCart>(
+          update: (context, auth, profile, previousCart) {
+            // Rebuilds ShoppingCart when Auth or UserProfile changes
+            final cart = ShoppingCart(auth, profile);
+            // Preserve items if cart existed before
+            if (previousCart != null) {
+              cart._items.addAll(previousCart._items);
+            }
+            return cart;
+          },
+        ),
+      ],
+      child: MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'ProxyProvider Demo',
+      home: HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<Auth>();
+    final profile = context.watch<UserProfile>();
+    final cart = context.watch<ShoppingCart>();
+    
+    return Scaffold(
+      appBar: AppBar(title: Text('ProxyProvider Example')),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Auth Status
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Authentication',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Text('Status: ${auth.isAuthenticated ? "Logged In" : "Guest"}'),
+                    SizedBox(height: 8),
+                    auth.isAuthenticated
+                        ? ElevatedButton(
+                            onPressed: () => auth.logout(),
+                            child: Text('Logout'),
+                          )
+                        : ElevatedButton(
+                            onPressed: () => auth.login('user123'),
+                            child: Text('Login'),
+                          ),
+                  ],
+                ),
+              ),
+            ),
+            
+            SizedBox(height: 16),
+            
+            // Profile (depends on Auth)
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Profile',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Text(profile.welcomeMessage),
+                  ],
+                ),
+              ),
+            ),
+            
+            SizedBox(height: 16),
+            
+            // Shopping Cart (depends on Auth and Profile)
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Shopping Cart',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Text(cart.summary),
+                    SizedBox(height: 8),
+                    if (cart.items.isNotEmpty)
+                      ...cart.items.map((item) => Text('- $item')),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => cart.addItem('Item ${cart.itemCount + 1}'),
+                          child: Text('Add Item'),
+                        ),
+                        SizedBox(width: 8),
+                        if (cart.items.isNotEmpty)
+                          ElevatedButton(
+                            onPressed: () => cart.clear(),
+                            child: Text('Clear Cart'),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            SizedBox(height: 16),
+            
+            Text(
+              'Note: Try logging in/out to see how Profile and Cart update automatically!',
+              style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+5. Consumer Widget - Optimized Rebuilding
+Consumer allows you to rebuild only specific parts of your widget tree:
+dartclass ProductPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Product')),
+      body: Column(
+        children: [
+          // This header never rebuilds
+          Header(),
+          
+          // Only this Consumer rebuilds when Cart changes
+          Consumer<Cart>(
+            builder: (context, cart, child) {
+              return Text('Items in cart: ${cart.itemCount}');
+            },
+          ),
+          
+          // This footer never rebuilds
+          Footer(),
+        ],
+      ),
+    );
+  }
+}
+The child parameter in Consumer is for widgets that should NOT rebuild:
+dartConsumer<Cart>(
+  builder: (context, cart, child) {
+    return Column(
+      children: [
+        Text('Total: \$${cart.total}'), // Rebuilds
+        child!, // Doesn't rebuild
+      ],
+    );
+  },
+  child: ExpensiveWidget(), // Built once, reused
+)
+6. Different Provider Types
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'dart:async';
+
+// 1. PROVIDER - For simple values
+class SimpleValueExample extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Provider<String>(
+      create: (_) => 'Hello from Provider!',
+      child: Consumer<String>(
+        builder: (context, value, child) => Text(value),
+      ),
+    );
+  }
+}
+
+// 2. CHANGENOTIFIERPROVIDER - For observable objects
+class Counter with ChangeNotifier {
+  int _count = 0;
+  int get count => _count;
+  
+  void increment() {
+    _count++;
+    notifyListeners();
+  }
+}
+
+class ChangeNotifierExample extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => Counter(),
+      child: Consumer<Counter>(
+        builder: (context, counter, child) {
+          return Column(
+            children: [
+              Text('Count: ${counter.count}'),
+              ElevatedButton(
+                onPressed: counter.increment,
+                child: Text('Increment'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// 3. FUTUREPROVIDER - For async operations
+class FutureProviderExample extends StatelessWidget {
+  Future<String> fetchData() async {
+    await Future.delayed(Duration(seconds: 2));
+    return 'Data loaded!';
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return FutureProvider<String?>(
+      initialValue: null,
+      create: (_) => fetchData(),
+      child: Consumer<String?>(
+        builder: (context, data, child) {
+          if (data == null) {
+            return CircularProgressIndicator();
+          }
+          return Text(data);
+        },
+      ),
+    );
+  }
+}
+
+// 4. STREAMPROVIDER - For real-time data
+class StreamProviderExample extends StatelessWidget {
+  Stream<int> countStream() async* {
+    for (int i = 0; i < 10; i++) {
+      await Future.delayed(Duration(seconds: 1));
+      yield i;
+    }
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return StreamProvider<int?>(
+      initialData: null,
+      create: (_) => countStream(),
+      child: Consumer<int?>(
+        builder: (context, count, child) {
+          return Text('Stream count: ${count ?? "waiting..."}');
+        },
+      ),
+    );
+  }
+}
+
+// 5. VALUELISTENABLEPROVIDER - For ValueNotifier
+class ValueListenableExample extends StatelessWidget {
+  final ValueNotifier<int> counter = ValueNotifier<int>(0);
+  
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableProvider<int>(
+      create: (_) => counter,
+      child: Column(
+        children: [
+          Consumer<int>(
+            builder: (context, count, child) {
+              return Text('Count: $count');
+            },
+          ),
+          ElevatedButton(
+            onPressed: () => counter.value++,
+            child: Text('Increment'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// 6. LISTENABLEPROVIDER - For custom Listenable
+class MyListenable extends ChangeNotifier {
+  String _message = 'Initial';
+  String get message => _message;
+  
+  void updateMessage(String newMessage) {
+    _message = newMessage;
+    notifyListeners();
+  }
+}
+
+class ListenableExample extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ListenableProvider(
+      create: (_) => MyListenable(),
+      child: Consumer<MyListenable>(
+        builder: (context, listenable, child) {
+          return Text(listenable.message);
+        },
+      ),
+    );
+  }
+}
+
+// COMPLETE DEMO APP
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Provider Types Demo',
+      home: ProviderTypesDemo(),
+    );
+  }
+}
+
+class ProviderTypesDemo extends StatefulWidget {
+  @override
+  _ProviderTypesDemoState createState() => _ProviderTypesDemoState();
+}
+
+class _ProviderTypesDemoState extends State<ProviderTypesDemo> {
+  int _selectedIndex = 0;
+  
+  final List<Widget> _examples = [
+    SimpleValueExample(),
+    ChangeNotifierExample(),
+    FutureProviderExample(),
+    StreamProviderExample(),
+    ValueListenableExample(),
+    ListenableExample(),
+  ];
+  
+  final List<String> _titles = [
+    'Provider',
+    'ChangeNotifierProvider',
+    'FutureProvider',
+    'StreamProvider',
+    'ValueListenableProvider',
+    'ListenableProvider',
+  ];
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_titles[_selectedIndex]),
+      ),
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: _examples[_selectedIndex],
+        ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        items: _titles.map((title) {
+          return BottomNavigationBarItem(
+            icon: Icon(Icons.code),
+            label: title.replaceAll('Provider', ''),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+Common Patterns and Best Practices
+7. Selector for Performance Optimization
+Use Selector when you only care about specific properties:
+dartclass UserDisplay extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Without Selector - rebuilds when ANY property changes
+    final user = context.watch<User>();
+    return Text(user.name);
+    
+    // With Selector - only rebuilds when name changes
+    final name = context.select<User, String>((user) => user.name);
+    return Text(name);
+  }
+}
+
+// Selector widget alternative
+Selector<User, String>(
+  selector: (context, user) => user.name,
+  builder: (context, name, child) {
+    return Text(name);
+  },
+)
+8. Optional Provider Dependencies
+Sometimes a provider might not exist:
+dartclass OptionalWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Use nullable type to make it optional
+    final cart = context.watch<ShoppingCart?>();
+    
+    if (cart == null) {
+      return Text('No cart available');
+    }
+    
+    return Text('Items: ${cart.itemCount}');
+  }
+}
+9. Common Pitfalls and Solutions
+Pitfall 1: Using watch() in initState
+dart// ❌ WRONG - initState is called once
+@override
+void initState() {
+  super.initState();
+  final value = context.watch<MyValue>(); // Error!
+}
+
+// ✅ CORRECT Option 1 - Use read() for one-time access
+@override
+void initState() {
+  super.initState();
+  final value = context.read<MyValue>();
+  value.initialize();
+}
+
+// ✅ CORRECT Option 2 - Use build() for reactive updates
+@override
+Widget build(BuildContext context) {
+  final value = context.watch<MyValue>();
+  // React to changes here
+  return Text('${value.data}');
+}
+Pitfall 2: Modifying state during build
+dart// ❌ WRONG - Don't call notifyListeners during build
+class MyWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final counter = context.watch<Counter>();
+    counter.increment(); // Error! Can't modify during build
+    return Text('${counter.count}');
+  }
+}
+
+// ✅ CORRECT - Use callbacks or lifecycle methods
+class MyWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {
+        context.read<Counter>().increment(); // OK in callbacks
+      },
+      child: Text('Increment'),
+    );
+  }
+}
+
+// ✅ CORRECT - Use Future.microtask for initialization
+@override
+void initState() {
+  super.initState();
+  Future.microtask(() {
+    context.read<Counter>().initialize();
+  });
+}
+10. Real-World Example: Todo App
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+// MODEL
+class Todo {
+  final String id;
+  String title;
+  bool isCompleted;
+  
+  Todo({
+    required this.id,
+    required this.title,
+    this.isCompleted = false,
+  });
+}
+
+// PROVIDER MODEL
+class TodoList with ChangeNotifier {
+  final List<Todo> _todos = [];
+  String _filter = 'all'; // all, active, completed
+  
+  List<Todo> get todos {
+    switch (_filter) {
+      case 'active':
+        return _todos.where((todo) => !todo.isCompleted).toList();
+      case 'completed':
+        return _todos.where((todo) => todo.isCompleted).toList();
+      default:
+        return _todos;
+    }
+  }
+  
+  int get totalCount => _todos.length;
+  int get activeCount => _todos.where((t) => !t.isCompleted).length;
+  int get completedCount => _todos.where((t) => t.isCompleted).length;
+  
+  String get filter => _filter;
+  
+  void addTodo(String title) {
+    if (title.trim().isEmpty) return;
+    
+    _todos.add(Todo(
+      id: DateTime.now().toString(),
+      title: title,
+    ));
+    notifyListeners();
+  }
+  
+  void toggleTodo(String id) {
+    final index = _todos.indexWhere((todo) => todo.id == id);
+    if (index != -1) {
+      _todos[index].isCompleted = !_todos[index].isCompleted;
+      notifyListeners();
+    }
+  }
+  
+  void deleteTodo(String id) {
+    _todos.removeWhere((todo) => todo.id == id);
+    notifyListeners();
+  }
+  
+  void updateTodo(String id, String newTitle) {
+    final index = _todos.indexWhere((todo) => todo.id == id);
+    if (index != -1) {
+      _todos[index].title = newTitle;
+      notifyListeners();
+    }
+  }
+  
+  void setFilter(String filter) {
+    _filter = filter;
+    notifyListeners();
+  }
+  
+  void clearCompleted() {
+    _todos.removeWhere((todo) => todo.isCompleted);
+    notifyListeners();
+  }
+}
+
+// MAIN APP
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => TodoList(),
+      child: MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Todo with Provider',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      home: TodoPage(),
+    );
+  }
+}
+
+// HOME PAGE
+class TodoPage extends StatelessWidget {
+  final TextEditingController _controller = TextEditingController();
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Todo List'),
+        actions: [
+          // Show count using select for optimization
+          Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Selector<TodoList, int>(
+                selector: (context, todoList) => todoList.activeCount,
+                builder: (context, activeCount, child) {
+                  return Text(
+                    '$activeCount active',
+                    style: TextStyle(fontSize: 16),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Input field
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      hintText: 'What needs to be done?',
+                      border: OutlineInputBorder(),
+                    ),
+                    onSubmitted: (value) {
+                      context.read<TodoList>().addTodo(value);
+                      _controller.clear();
+                    },
+                  ),
+                ),
+                SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    context.read<TodoList>().addTodo(_controller.text);
+                    _controller.clear();
+                  },
+                  child: Icon(Icons.add),
+                ),
+              ],
+            ),
+          ),
+          
+          // Filter buttons
+          FilterButtons(),
+          
+          // Todo list
+          Expanded(
+            child: TodoListView(),
+          ),
+          
+          // Bottom stats
+          BottomStats(),
+        ],
+      ),
+    );
+  }
+}
+
+// FILTER BUTTONS
+class FilterButtons extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final currentFilter = context.watch<TodoList>().filter;
+    
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FilterButton(
+            label: 'All',
+            value: 'all',
+            isSelected: currentFilter == 'all',
+          ),
+          SizedBox(width: 8),
+          FilterButton(
+            label: 'Active',
+            value: 'active',
+            isSelected: currentFilter == 'active',
+          ),
+          SizedBox(width: 8),
+          FilterButton(
+            label: 'Completed',
+            value: 'completed',
+            isSelected: currentFilter == 'completed',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FilterButton extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool isSelected;
+  
+  const FilterButton({
+    required this.label,
+    required this.value,
+    required this.isSelected,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected ? Colors.blue : Colors.grey[300],
+        foregroundColor: isSelected ? Colors.white : Colors.black,
+      ),
+      onPressed: () {
+        context.read<TodoList>().setFilter(value);
+      },
+      child: Text(label),
+    );
+  }
+}
+
+// TODO LIST VIEW
+class TodoListView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<TodoList>(
+      builder: (context, todoList, child) {
+        final todos = todoList.todos;
+        
+        if (todos.isEmpty) {
+          return Center(
+            child: Text(
+              'No todos yet!',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+          );
+        }
+        
+        return ListView.builder(
+          itemCount: todos.length,
+          itemBuilder: (context, index) {
+            return TodoItem(todo: todos[index]);
+          },
+        );
+      },
+    );
+  }
+}
+
+// TODO ITEM
+class TodoItem extends StatelessWidget {
+  final Todo todo;
+  
+  const TodoItem({required this.todo});
+  
+  @override
+  Widget build(BuildContext context) {
+    return Dismissible(
+      key: Key(todo.id),
+      background: Container(
+        color: Colors.red,
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: 16),
+        child: Icon(Icons.delete, color: Colors.white),
+      ),
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) {
+        context.read<TodoList>().deleteTodo(todo.id);
+      },
+      child: ListTile(
+        leading: Checkbox(
+          value: todo.isCompleted,
+          onChanged: (_) {
+            context.read<TodoList>().toggleTodo(todo.id);
+          },
+        ),
+        title: Text(
+          todo.title,
+          style: TextStyle(
+            decoration: todo.isCompleted
+                ? TextDecoration.lineThrough
+                : TextDecoration.none,
+            color: todo.isCompleted ? Colors.grey : Colors.black,
+          ),
+        ),
+        trailing: IconButton(
+          icon: Icon(Icons.edit),
+          onPressed: () {
+            _showEditDialog(context, todo);
+          },
+        ),
+      ),
+    );
+  }
+  
+  void _showEditDialog(BuildContext context, Todo todo) {
+    final controller = TextEditingController(text: todo.title);
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Edit Todo'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                context.read<TodoList>().updateTodo(todo.id, controller.text);
+                Navigator.pop(dialogContext);
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// BOTTOM STATS
+class BottomStats extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: Colors.grey[300]!)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Total count
+          Selector<TodoList, int>(
+            selector: (context, todoList) => todoList.totalCount,
+            builder: (context, total, child) {
+              return Text('Total: $total');
+            },
+          ),
+          
+          // Completed count
+          Selector<TodoList, int>(
+            selector: (context, todoList) => todoList.completedCount,
+            builder: (context, completed, child) {
+              return Text('Completed: $completed');
+            },
+          ),
+          
+          // Clear completed button
+          Selector<TodoList, bool>(
+            selector: (context, todoList) => todoList.completedCount > 0,
+            builder: (context, hasCompleted, child) {
+              return TextButton(
+                onPressed: hasCompleted
+                    ? () => context.read<TodoList>().clearCompleted()
+                    : null,
+                child: Text('Clear Completed'),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Key Takeaways
+When to Use Which Method:
+
+context.watch<T>() - When widget needs to rebuild on changes
+context.read<T>() - For event handlers, one-time access
+context.select<T, R>() - When watching specific properties only
+Consumer<T> - For targeted rebuilds in widget tree
+Selector<T, R> - Alternative to context.select() with child optimization
+
+Provider Types Quick Reference:
+
+Provider - Simple, immutable values
+ChangeNotifierProvider - Mutable objects that notify changes (most common)
+FutureProvider - One-time async operations
+StreamProvider - Real-time data streams
+ValueListenableProvider - For ValueNotifier objects
+ProxyProvider - Combine multiple providers
+
+Performance Tips:
+
+Use Selector to listen to specific properties
+Use Consumer with child parameter for expensive widgets
+Use context.read() in callbacks to avoid unnecessary rebuilds
+Keep providers as high as needed but as low as possible in the tree
+Don't create objects in create that depend on changing variables
+
+Common Mistakes to Avoid:
+
+❌ Using .value constructor for new objects
+❌ Using watch() in initState()
+❌ Modifying state during build()
+❌ Creating objects in create with dynamic parameters
+❌ Forgetting to call notifyListeners() after state changes
+
+Provider is powerful for managing state in Flutter apps of any size. Start simple with ChangeNotifierProvider, then add ProxyProvider, Selector, and other advanced features as your app grows!
