@@ -1,0 +1,1463 @@
+GetIt: Complete Guide for First-Time Learners
+Table of Contents
+
+What is GetIt?
+Core Concepts
+How GetIt Works Internally
+Registration Types Deep Dive
+Practical Examples
+Testing with GetIt
+Best Practices
+Analysis of Your Implementation
+
+
+What is GetIt?
+The Problem GetIt Solves
+Imagine you're building a house (your Flutter app). You need various utilities:
+
+Electricity (API Service)
+Water (Database)
+Internet (Network Service)
+
+Traditional Approach Problems:
+// ❌ Problem 1: Passing objects down the widget tree
+class HomePage extends StatelessWidget {
+  final ApiService apiService;
+  final Database database;
+  final NetworkService network;
+  
+  HomePage(this.apiService, this.database, this.network); // Too many parameters!
+  
+  @override
+  Widget build(BuildContext context) {
+    return ChildWidget(apiService, database, network); // Passing down again!
+  }
+}
+
+// ❌ Problem 2: Creating new instances everywhere
+class LoginPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final api = ApiService(); // New instance every time!
+    final db = Database();     // Expensive operations repeated!
+  }
+}
+GetIt Solution:
+// ✅ Register once at app startup
+void main() {
+  getIt.registerSingleton<ApiService>(ApiService());
+  getIt.registerSingleton<Database>(Database());
+  runApp(MyApp());
+}
+
+// ✅ Access from anywhere without passing parameters
+class HomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final api = getIt<ApiService>(); // Get the same instance!
+    // No parameters needed, access directly
+  }
+}
+```
+
+### What is a Service Locator?
+
+Think of GetIt as a **smart warehouse** (locator pattern):
+```
+┌─────────────────────────────────┐
+│      GetIt Warehouse            │
+├─────────────────────────────────┤
+│ Shelf A: ApiService             │
+│ Shelf B: Database               │
+│ Shelf C: AuthService            │
+│ Shelf D: UserRepository         │
+└─────────────────────────────────┘
+        ↓
+   Access from anywhere:
+   getIt<ApiService>()
+Key Analogy:
+
+Registration = Storing items in the warehouse
+Retrieval = Picking up items when needed
+Type Parameter = The label on each shelf (so you find the right item)
+
+
+Core Concepts
+1. The Global Instance
+// This is your warehouse - one central storage
+final getIt = GetIt.instance;
+
+// Alternative names you might see:
+final sl = GetIt.instance;     // "service locator"
+final di = GetIt.instance;     // "dependency injection"
+final locator = GetIt.instance;
+Important: GetIt.instance is a singleton - calling it multiple times gives you the same warehouse, not different ones.
+final warehouse1 = GetIt.instance;
+final warehouse2 = GetIt.instance;
+
+print(warehouse1 == warehouse2); // true - same warehouse!
+2. Type Safety
+GetIt uses Dart generics for type safety:
+// Register with type
+getIt.registerSingleton<ApiService>(ApiService());
+
+// Type-safe retrieval
+ApiService api = getIt<ApiService>(); // ✅ Compile-time safety
+ApiService api = getIt.get<ApiService>(); // ✅ Same thing, explicit
+
+// The type you use to register is the type you use to retrieve
+getIt.registerSingleton<Database>(DatabaseImpl());
+Database db = getIt<Database>(); // ✅ Works
+DatabaseImpl impl = getIt<DatabaseImpl>(); // ❌ Error! Not registered as DatabaseImpl
+3. O(1) Lookup Speed
+What does O(1) mean?
+
+Finding an object takes the same time regardless of how many objects you have
+10 objects? Fast.
+1000 objects? Still fast.
+It's like having labeled boxes - you go directly to the right box
+
+How it achieves this:
+// Internally, GetIt uses Dart's Map (hash table)
+Map<Type, Object> _singletons = {};
+
+// Registration: O(1) - direct storage
+_singletons[ApiService] = ApiServiceInstance;
+
+// Retrieval: O(1) - direct lookup by type
+return _singletons[ApiService];
+
+How GetIt Works Internally
+Internal Architecture
+Let's peek under the hood to understand GetIt's magic:
+// Simplified internal structure of GetIt
+class GetIt {
+  // Storage containers for different registration types
+  final Map<Type, Object> _singletons = {};           // Already created instances
+  final Map<Type, Function> _factories = {};          // Factory functions
+  final Map<Type, Function> _lazySingletons = {};     // Not yet created singletons
+  final Map<Type, bool> _lazySingletonsCreated = {};  // Track if created
+  
+  static GetIt? _instance;
+  
+  // Singleton pattern - always returns same instance
+  static GetIt get instance {
+    _instance ??= GetIt._internal();
+    return _instance!;
+  }
+  
+  GetIt._internal(); // Private constructor
+}
+Registration Flow
+1. Singleton Registration
+dartgetIt.registerSingleton<ApiService>(ApiService());
+
+// What happens internally:
+void registerSingleton<T extends Object>(T instance) {
+  // 1. Check if already registered
+  if (_singletons.containsKey(T)) {
+    throw Exception('Type $T already registered');
+  }
+  
+  // 2. Store immediately in map
+  _singletons[T] = instance;
+  
+  // That's it! Instance ready to use immediately
+}
+```
+
+**Visual Flow:**
+```
+User Code: registerSingleton<ApiService>(ApiService())
+    ↓
+CreateInstance: ApiService() is called NOW
+    ↓
+Store: _singletons[ApiService] = instance
+    ↓
+Done: Instance ready for immediate use
+2. Lazy Singleton Registration
+dartgetIt.registerLazySingleton<Database>(() => Database());
+
+// What happens internally:
+void registerLazySingleton<T extends Object>(T Function() factoryFunc) {
+  // 1. Store only the FUNCTION, not the instance
+  _lazySingletons[T] = factoryFunc;
+  _lazySingletonsCreated[T] = false; // Mark as not created yet
+  
+  // No instance created yet! Just stored the recipe
+}
+```
+
+**Visual Flow:**
+```
+User Code: registerLazySingleton<Database>(() => Database())
+    ↓
+Store Function: _lazySingletons[Database] = () => Database()
+    ↓
+Mark Uncreated: _lazySingletonsCreated[Database] = false
+    ↓
+Done: Function stored, instance NOT created yet
+3. Factory Registration
+getIt.registerFactory<ShoppingCart>(() => ShoppingCart());
+
+// What happens internally:
+void registerFactory<T extends Object>(T Function() factoryFunc) {
+  // Store the factory function
+  _factories[T] = factoryFunc;
+  
+  // Function is stored, will be called every time get<T>() is called
+}
+Retrieval Flow
+// When you call getIt<Database>()
+T get<T extends Object>() {
+  // 1. Check singletons first (fastest)
+  if (_singletons.containsKey(T)) {
+    return _singletons[T] as T;
+  }
+  
+  // 2. Check lazy singletons
+  if (_lazySingletons.containsKey(T)) {
+    // Has it been created yet?
+    if (!_lazySingletonsCreated[T]!) {
+      // Create it now (first access)
+      final factoryFunc = _lazySingletons[T] as T Function();
+      final instance = factoryFunc(); // Call the factory
+      
+      // Store for future use
+      _singletons[T] = instance;
+      _lazySingletonsCreated[T] = true;
+    }
+    return _singletons[T] as T;
+  }
+  
+  // 3. Check factories
+  if (_factories.containsKey(T)) {
+    final factoryFunc = _factories[T] as T Function();
+    return factoryFunc(); // Create NEW instance every time
+  }
+  
+  // 4. Not found!
+  throw Exception('Type $T not registered');
+}
+```
+
+**Visual Flow for Lazy Singleton (First Access):**
+```
+User: getIt<Database>()
+    ↓
+Check: Is it in _singletons? NO
+    ↓
+Check: Is it in _lazySingletons? YES
+    ↓
+Check: Already created? NO (_lazySingletonsCreated[Database] = false)
+    ↓
+Execute: Call factory function () => Database()
+    ↓
+Store: _singletons[Database] = new instance
+    ↓
+Mark: _lazySingletonsCreated[Database] = true
+    ↓
+Return: The newly created instance
+```
+
+**Visual Flow for Lazy Singleton (Subsequent Access):**
+```
+User: getIt<Database>()
+    ↓
+Check: Is it in _singletons? YES (created in first access)
+    ↓
+Return: Existing instance immediately
+```
+
+### Memory Layout
+```
+Registration Type          Memory State After Registration
+─────────────────────────────────────────────────────────
+registerSingleton          Instance exists in memory
+                          _singletons[Type] = instance ✓
+
+registerLazySingleton      Only function exists
+                          _lazySingletons[Type] = function ✓
+                          Instance = null ✗
+
+registerFactory            Only function exists
+                          _factories[Type] = function ✓
+                          No instance storage
+
+Registration Types Deep Dive
+1. Singleton: Immediate Creation
+When to Use:
+
+Service needed at app startup
+Fast to create (< 100ms)
+Will definitely be used
+
+Example: Logger Service
+class Logger {
+  Logger() {
+    print('Logger created'); // Runs immediately at registration
+  }
+  
+  void log(String message) {
+    print('[LOG] $message');
+  }
+}
+
+void setupServices() {
+  // Instance created HERE, during registration
+  getIt.registerSingleton<Logger>(Logger());
+  // Console output: "Logger created"
+}
+
+// Later in app...
+void someFunction() {
+  getIt<Logger>().log('Hello'); // Uses existing instance
+}
+```
+
+**Timeline:**
+```
+App Start
+    ↓
+Register: getIt.registerSingleton<Logger>(Logger())
+    ↓
+Create: Logger() constructor runs NOW
+    ↓
+Store: Instance saved in memory
+    ↓
+[10 minutes later]
+    ↓
+Access: getIt<Logger>()
+    ↓
+Return: Same instance created at startup
+2. Lazy Singleton: Delayed Creation
+When to Use:
+
+Service not immediately needed
+Expensive to create (network, file I/O)
+May not be used in some app flows
+
+Example: Image Cache
+class ImageCache {
+  final List<Uint8List> _cache = [];
+  
+  ImageCache() {
+    print('ImageCache created - allocating 50MB memory');
+    // Expensive operation - only do when needed
+    _allocateMemory();
+  }
+  
+  void _allocateMemory() {
+    // Simulate expensive initialization
+  }
+}
+
+void setupServices() {
+  // NO instance created yet, just storing the recipe
+  getIt.registerLazySingleton<ImageCache>(() => ImageCache());
+  // Console: Nothing printed
+}
+
+// User navigates to gallery screen
+void onGalleryOpened() {
+  // NOW it's created (first access)
+  final cache = getIt<ImageCache>();
+  // Console output: "ImageCache created - allocating 50MB memory"
+}
+
+// User opens gallery again
+void onGalleryOpenedAgain() {
+  final cache = getIt<ImageCache>(); // Same instance, no creation
+  // Console: Nothing (already created)
+}
+```
+
+**Timeline:**
+```
+App Start
+    ↓
+Register: getIt.registerLazySingleton<ImageCache>(() => ImageCache())
+    ↓
+Store: Function stored, NO instance created
+    ↓
+[User navigates app - 5 minutes]
+    ↓
+First Access: getIt<ImageCache>()
+    ↓
+Create: ImageCache() constructor runs NOW
+    ↓
+Store: Instance saved for future
+    ↓
+[Later accesses]
+    ↓
+Return: Same instance created on first access
+3. Factory: New Every Time
+When to Use:
+
+Need fresh instance each time
+Temporary objects (dialogs, forms)
+Objects with different state per use
+
+Example: Dialog Controller
+dartclass DialogController {
+  final String id = DateTime.now().toString();
+  bool isVisible = false;
+  
+  DialogController() {
+    print('Dialog $id created');
+  }
+  
+  void show() {
+    isVisible = true;
+    print('Dialog $id shown');
+  }
+  
+  void close() {
+    isVisible = false;
+    print('Dialog $id closed');
+  }
+}
+
+void setupServices() {
+  // Store factory function
+  getIt.registerFactory<DialogController>(() => DialogController());
+}
+
+// User clicks button multiple times
+void onButtonClick1() {
+  final dialog1 = getIt<DialogController>();
+  dialog1.show();
+  // Console: "Dialog 2024-01-01 10:00:00 created"
+  //          "Dialog 2024-01-01 10:00:00 shown"
+}
+
+void onButtonClick2() {
+  final dialog2 = getIt<DialogController>();
+  dialog2.show();
+  // Console: "Dialog 2024-01-01 10:00:05 created" <- NEW instance
+  //          "Dialog 2024-01-01 10:00:05 shown"
+  
+  print(dialog1 == dialog2); // false - different instances!
+}
+```
+
+**Timeline:**
+```
+Register: getIt.registerFactory<DialogController>(() => DialogController())
+    ↓
+Store: Function stored
+    ↓
+Access 1: getIt<DialogController>()
+    ↓
+Create: NEW DialogController() - Instance A
+    ↓
+Access 2: getIt<DialogController>()
+    ↓
+Create: NEW DialogController() - Instance B
+    ↓
+Access 3: getIt<DialogController>()
+    ↓
+Create: NEW DialogController() - Instance C
+Comparison Table
+AspectSingletonLazy SingletonFactoryCreated WhenAt registrationFirst accessEvery accessInstance Count1 (shared)1 (shared)Many (new each time)MemoryImmediate allocationDelayed allocationTemporaryStartup ImpactIncreases startup timeNo impactNo impactUse CaseCore servicesOptional featuresTemporary objectsExampleLogger, ConfigDatabase, CacheForms, Dialogs
+
+Practical Examples
+Example 1: Simple E-Commerce App
+dart// ============================================
+// 1. DEFINE YOUR SERVICES
+// ============================================
+
+// API client for network requests
+class ApiClient {
+  final String baseUrl = 'https://api.shop.com';
+  
+  ApiClient() {
+    print('🌐 ApiClient initialized');
+  }
+  
+  Future<List<Product>> getProducts() async {
+    print('📦 Fetching products from $baseUrl');
+    await Future.delayed(Duration(seconds: 1));
+    return [
+      Product('Laptop', 999.99),
+      Product('Mouse', 29.99),
+    ];
+  }
+}
+
+// Product model
+class Product {
+  final String name;
+  final double price;
+  Product(this.name, this.price);
+}
+
+// Shopping cart service
+class CartService {
+  final ApiClient _apiClient;
+  final List<Product> _items = [];
+  
+  // Dependency injection via constructor
+  CartService(this._apiClient) {
+    print('🛒 CartService initialized');
+  }
+  
+  void addItem(Product product) {
+    _items.add(product);
+    print('➕ Added ${product.name} to cart');
+  }
+  
+  int get itemCount => _items.length;
+  
+  double get total => _items.fold(0, (sum, item) => sum + item.price);
+}
+
+// Analytics service (not always used)
+class AnalyticsService {
+  AnalyticsService() {
+    print('📊 AnalyticsService initialized (expensive operation!)');
+    // Simulate expensive initialization
+    _initializeSDK();
+  }
+  
+  void _initializeSDK() {
+    // Heavy operation
+  }
+  
+  void trackEvent(String eventName) {
+    print('📈 Event tracked: $eventName');
+  }
+}
+
+// ============================================
+// 2. SETUP GETIT
+// ============================================
+
+final getIt = GetIt.instance;
+
+void setupDependencies() {
+  print('\n🚀 Setting up dependencies...\n');
+  
+  // Singleton: Created immediately, used throughout app
+  getIt.registerSingleton<ApiClient>(ApiClient());
+  
+  // Lazy Singleton: Created only when first accessed
+  // Notice how we pass getIt<ApiClient>() - dependency injection!
+  getIt.registerLazySingleton<CartService>(
+    () => CartService(getIt<ApiClient>())
+  );
+  
+  // Lazy Singleton: Analytics not needed at startup
+  getIt.registerLazySingleton<AnalyticsService>(
+    () => AnalyticsService()
+  );
+  
+  print('✅ Dependencies registered\n');
+}
+
+// ============================================
+// 3. USE IN YOUR APP
+// ============================================
+
+class ProductsPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () async {
+        // Access services from anywhere - no passing down the tree!
+        print('\n👆 User tapped "Load Products"\n');
+        
+        // Get API client
+        final api = getIt<ApiClient>();
+        final products = await api.getProducts();
+        
+        // Get cart service (created on first access if not already)
+        final cart = getIt<CartService>();
+        
+        // Add first product
+        if (products.isNotEmpty) {
+          cart.addItem(products[0]);
+          
+          // Track analytics (created on first access)
+          final analytics = getIt<AnalyticsService>();
+          analytics.trackEvent('product_added');
+        }
+        
+        print('\n📊 Cart total: \$${cart.total}');
+        print('📦 Items in cart: ${cart.itemCount}\n');
+      },
+      child: Text('Load Products'),
+    );
+  }
+}
+
+// ============================================
+// 4. MAIN FUNCTION
+// ============================================
+
+void main() {
+  setupDependencies();
+  
+  // Simulate app flow
+  print('═══════════════════════════════════\n');
+  print('App started - user browsing...\n');
+  
+  // User navigates to products page and clicks
+  ProductsPage().build(null);
+}
+
+/* 
+OUTPUT:
+═══════════════════════════════════════════
+🚀 Setting up dependencies...
+
+🌐 ApiClient initialized
+✅ Dependencies registered
+
+═══════════════════════════════════════════
+
+App started - user browsing...
+
+👆 User tapped "Load Products"
+
+📦 Fetching products from https://api.shop.com
+🛒 CartService initialized        <- Created on first access
+➕ Added Laptop to cart
+📊 AnalyticsService initialized   <- Created on first access
+📈 Event tracked: product_added
+
+📊 Cart total: $999.99
+📦 Items in cart: 1
+*/
+Example 2: Authentication Flow
+dart// ============================================
+// SERVICES
+// ============================================
+
+class AuthService {
+  bool _isLoggedIn = false;
+  String? _userId;
+  
+  bool get isLoggedIn => _isLoggedIn;
+  String? get userId => _userId;
+  
+  Future<void> login(String email, String password) async {
+    print('🔐 Logging in $email...');
+    await Future.delayed(Duration(seconds: 1));
+    _isLoggedIn = true;
+    _userId = 'user_123';
+    print('✅ Login successful');
+  }
+  
+  void logout() {
+    print('👋 Logging out');
+    _isLoggedIn = false;
+    _userId = null;
+  }
+}
+
+class UserProfileService {
+  final AuthService _authService;
+  
+  UserProfileService(this._authService);
+  
+  Future<Map<String, String>> getProfile() async {
+    if (!_authService.isLoggedIn) {
+      throw Exception('Not logged in');
+    }
+    
+    print('👤 Fetching profile for ${_authService.userId}');
+    await Future.delayed(Duration(milliseconds: 500));
+    
+    return {
+      'name': 'John Doe',
+      'email': 'john@example.com',
+    };
+  }
+}
+
+// ============================================
+// SETUP
+// ============================================
+
+void setupAuth() {
+  // Auth service used throughout app lifetime
+  getIt.registerSingleton<AuthService>(AuthService());
+  
+  // Profile service depends on auth
+  getIt.registerLazySingleton<UserProfileService>(
+    () => UserProfileService(getIt<AuthService>())
+  );
+}
+
+// ============================================
+// USAGE
+// ============================================
+
+void loginFlow() async {
+  // Login screen
+  final auth = getIt<AuthService>();
+  await auth.login('john@example.com', 'password123');
+  
+  // Profile screen (lazy service created here)
+  final profileService = getIt<UserProfileService>();
+  final profile = await profileService.getProfile();
+  
+  print('📋 Profile: ${profile['name']}');
+}
+
+Testing with GetIt
+The Testing Challenge
+dart// Your app code
+class UserRepository {
+  final ApiClient _api;
+  
+  UserRepository(this._api);
+  
+  Future<User> getUser(String id) async {
+    return _api.fetchUser(id); // Real network call
+  }
+}
+
+// ❌ Problem: Tests make real network calls
+test('should get user', () async {
+  final repo = getIt<UserRepository>();
+  final user = await repo.getUser('123'); // Real API call! Slow and fragile
+  expect(user.name, 'John');
+});
+Solution 1: Reset and Re-register
+dart// Create mock class
+class MockApiClient implements ApiClient {
+  @override
+  Future<User> fetchUser(String id) async {
+    // No real network call!
+    return User(id: id, name: 'Mock User');
+  }
+}
+
+// Test setup
+setUp(() async {
+  await getIt.reset(); // Clear all registrations
+  
+  // Register mock instead of real service
+  getIt.registerSingleton<ApiClient>(MockApiClient());
+  getIt.registerSingleton<UserRepository>(
+    UserRepository(getIt<ApiClient>())
+  );
+});
+
+test('should get user', () async {
+  final repo = getIt<UserRepository>();
+  final user = await repo.getUser('123'); // Uses mock!
+  
+  expect(user.name, 'Mock User');
+});
+
+tearDown(() async {
+  await getIt.reset(); // Clean up for next test
+});
+Solution 2: Constructor Parameters (Recommended)
+dart// Make dependencies optional in constructor
+class UserRepository {
+  final ApiClient _api;
+  
+  // Allow injection for testing
+  UserRepository([ApiClient? api]) : _api = api ?? getIt<ApiClient>();
+  
+  Future<User> getUser(String id) => _api.fetchUser(id);
+}
+
+// In tests, inject mock directly
+test('should get user', () async {
+  final mockApi = MockApiClient();
+  final repo = UserRepository(mockApi); // Bypass GetIt entirely
+  
+  final user = await repo.getUser('123');
+  expect(user.name, 'Mock User');
+});
+
+// In production, use GetIt normally
+final repo = UserRepository(); // Uses getIt<ApiClient>() internally
+
+Best Practices
+1. Organization: Separate Setup File
+dart// lib/core/di/service_locator.dart
+import 'package:get_it/get_it.dart';
+
+final getIt = GetIt.instance;
+
+void setupDependencies() {
+  _registerCore();
+  _registerData();
+  _registerBusiness();
+  _registerUI();
+}
+
+void _registerCore() {
+  getIt.registerSingleton<Logger>(Logger());
+  getIt.registerSingleton<AppConfig>(AppConfig());
+}
+
+void _registerData() {
+  getIt.registerLazySingleton<ApiClient>(() => ApiClient());
+  getIt.registerLazySingleton<Database>(() => Database());
+}
+
+void _registerBusiness() {
+  getIt.registerLazySingleton<AuthService>(
+    () => AuthService(getIt<ApiClient>())
+  );
+  getIt.registerLazySingleton<UserRepository>(
+    () => UserRepository(getIt<ApiClient>(), getIt<Database>())
+  );
+}
+
+void _registerUI() {
+  getIt.registerFactory<LoginViewModel>(
+    () => LoginViewModel(getIt<AuthService>())
+  );
+}
+2. Main Function Setup
+dart// lib/main.dart
+import 'core/di/service_locator.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Setup GetIt BEFORE runApp
+  setupDependencies();
+  
+  runApp(MyApp());
+}
+3. Dependency Patterns
+dart// ✅ GOOD: Clear dependencies in constructor
+class UserService {
+  final ApiClient api;
+  final Database database;
+  
+  UserService({
+    required this.api,
+    required this.database,
+  });
+}
+
+// Registration
+getIt.registerLazySingleton<UserService>(
+  () => UserService(
+    api: getIt<ApiClient>(),
+    database: getIt<Database>(),
+  )
+);
+
+// ❌ BAD: Hidden GetIt calls inside class
+class UserService {
+  void getUser() {
+    final api = getIt<ApiClient>(); // Hidden dependency!
+    final db = getIt<Database>();   // Hard to test!
+  }
+}
+4. Abstract Classes for Testability
+// Define interface
+abstract class PaymentProcessor {
+  Future<bool> processPayment(double amount);
+}
+
+// Real implementation
+class StripePaymentProcessor implements PaymentProcessor {
+  @override
+  Future<bool> processPayment(double amount) async {
+    // Real Stripe API call
+  }
+}
+
+// Mock implementation
+class MockPaymentProcessor implements PaymentProcessor {
+  @override
+  Future<bool> processPayment(double amount) async {
+    // No real payment
+    return true;
+  }
+}
+
+// Register by interface
+void setupProduction() {
+  getIt.registerSingleton<PaymentProcessor>(StripePaymentProcessor());
+}
+
+void setupTesting() {
+  getIt.registerSingleton<PaymentProcessor>(MockPaymentProcessor());
+}
+
+// Usage - same code works with both!
+class CheckoutService {
+  final PaymentProcessor _processor;
+  CheckoutService(this._processor);
+  
+  Future<void> checkout(double amount) {
+    return _processor.processPayment(amount);
+  }
+}
+
+Summary
+Key Takeaways
+
+GetIt is a Service Locator - Central storage for your app's objects
+Type-Safe - Uses Dart generics for compile-time safety
+Fast - O(1) lookup using internal Map
+Three Registration Types:
+
+Singleton: Create immediately, share forever
+Lazy Singleton: Create on first use, share forever
+Factory: Create new instance every time
+
+
+No BuildContext - Access from anywhere in your app
+Testing Friendly - Easy to swap implementations
+
+When to Use What
+
+Singleton: Core services (Logger, Config, Network Client)
+Lazy Singleton: Optional services (Database, Cache, Analytics)
+Factory: Temporary objects (ViewModels, Forms, Dialogs)
+
+
+Before GetIt: Traditional Approaches
+1. Direct Instantiation (New Every Time)
+The most basic approach - create objects when you need them.
+dart// Service class
+class ApiService {
+  final String baseUrl = 'https://api.example.com';
+  
+  Future<User> getUser(String id) async {
+    print('ApiService created: $hashCode');
+    // Network call
+    return User(id: id, name: 'John');
+  }
+}
+
+// ❌ Problem: Creating everywhere
+class HomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final api = ApiService(); // Creates new instance
+    return ElevatedButton(
+      onPressed: () async {
+        final user = await api.getUser('123');
+        print(user.name);
+      },
+      child: Text('Get User'),
+    );
+  }
+}
+
+class ProfilePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final api = ApiService(); // Creates ANOTHER new instance
+    return ElevatedButton(
+      onPressed: () async {
+        final user = await api.getUser('123');
+        print(user.name);
+      },
+      child: Text('Get Profile'),
+    );
+  }
+}
+
+// Output when both pages are shown:
+// ApiService created: 485921304
+// ApiService created: 672394821
+// ☹️ Two instances for the same service!
+Problems:
+
+❌ Memory waste (multiple identical instances)
+❌ Can't share state between pages
+❌ Expensive initialization repeated
+❌ No central configuration
+
+
+2. Constructor Injection (Passing Down)
+Pass dependencies through constructors.
+dartclass ApiService {
+  Future<User> getUser(String id) async => User(id: id, name: 'John');
+}
+
+class UserRepository {
+  final ApiService apiService;
+  
+  UserRepository(this.apiService); // Injected
+  
+  Future<User> fetchUser(String id) => apiService.getUser(id);
+}
+
+// ❌ Problem: Constructor hell
+class HomePage extends StatelessWidget {
+  final ApiService apiService;
+  final UserRepository userRepository;
+  final AuthService authService;
+  final AnalyticsService analyticsService;
+  
+  // 😱 Too many parameters!
+  HomePage({
+    required this.apiService,
+    required this.userRepository,
+    required this.authService,
+    required this.analyticsService,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return ChildWidget(
+      apiService: apiService,
+      userRepository: userRepository,
+      authService: authService,
+      analyticsService: analyticsService,
+    );
+  }
+}
+
+class ChildWidget extends StatelessWidget {
+  // 😱 Pass everything down again!
+  final ApiService apiService;
+  final UserRepository userRepository;
+  final AuthService authService;
+  final AnalyticsService analyticsService;
+  
+  ChildWidget({
+    required this.apiService,
+    required this.userRepository,
+    required this.authService,
+    required this.analyticsService,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return GrandChildWidget(
+      apiService: apiService,
+      userRepository: userRepository,
+      authService: authService,
+      analyticsService: analyticsService,
+    );
+  }
+}
+
+// 😭 Passing through 5 levels of widgets!
+Problems:
+
+❌ Constructor parameter explosion
+❌ Widget tree pollution (passing unused parameters)
+❌ Hard to refactor (change one dependency = update 10 files)
+❌ Deep widget trees become unmanageable
+
+
+3. InheritedWidget / Provider Pattern
+Flutter's way to pass data down the tree without explicit parameters.
+dartclass ApiServiceProvider extends InheritedWidget {
+  final ApiService apiService;
+  
+  ApiServiceProvider({
+    required this.apiService,
+    required Widget child,
+  }) : super(child: child);
+  
+  static ApiService of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<ApiServiceProvider>()!.apiService;
+  }
+  
+  @override
+  bool updateShouldNotify(ApiServiceProvider old) => false;
+}
+
+// Setup
+void main() {
+  final apiService = ApiService();
+  
+  runApp(
+    ApiServiceProvider(
+      apiService: apiService,
+      child: MyApp(),
+    ),
+  );
+}
+
+// ❌ Problems: Need BuildContext, complex setup
+class HomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // ❌ Need context (not available everywhere)
+    final api = ApiServiceProvider.of(context);
+    
+    // ❌ Can't use in non-widget code
+    // void someBusinessLogic() {
+    //   final api = ApiServiceProvider.of(???); // No context!
+    // }
+    
+    return Text('Home');
+  }
+}
+Problems:
+
+❌ Requires BuildContext (not available in business logic)
+❌ Complex boilerplate for each service
+❌ Can't access from pure Dart classes
+❌ Testing requires widget testing setup
+
+
+4. Singleton Pattern (Global Instance)
+Create one instance accessible globally.
+dart// Traditional Singleton
+class ApiService {
+  // Private constructor
+  ApiService._internal();
+  
+  // Static instance
+  static final ApiService _instance = ApiService._internal();
+  
+  // Factory constructor returns same instance
+  factory ApiService() => _instance;
+  
+  Future<User> getUser(String id) async {
+    print('Using ApiService: $hashCode');
+    return User(id: id, name: 'John');
+  }
+}
+
+// Usage
+class HomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final api = ApiService(); // Gets singleton instance
+    return ElevatedButton(
+      onPressed: () async {
+        await api.getUser('123');
+      },
+      child: Text('Get User'),
+    );
+  }
+}
+
+class ProfilePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final api = ApiService(); // Gets SAME singleton instance
+    return ElevatedButton(
+      onPressed: () async {
+        await api.getUser('123');
+      },
+      child: Text('Get Profile'),
+    );
+  }
+}
+
+// Output:
+// Using ApiService: 485921304
+// Using ApiService: 485921304
+// ✅ Same instance!
+Looks Good! But has problems:
+
+❌ Hard to test (can't swap implementations)
+❌ Hidden dependencies (not visible in constructor)
+❌ Tight coupling to implementation
+❌ Can't have multiple configurations (dev/prod)
+❌ Initialization order issues
+
+
+Problems with Traditional Approaches
+Let me show you real problems with examples:
+Problem 1: Testing Nightmare
+dart// ❌ Traditional Singleton
+class ApiService {
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
+  
+  Future<User> getUser(String id) async {
+    // Real network call - can't mock!
+    final response = await http.get('https://api.example.com/users/$id');
+    return User.fromJson(response.body);
+  }
+}
+
+class UserRepository {
+  Future<User> fetchUser(String id) {
+    return ApiService().getUser(id); // Hidden dependency on singleton
+  }
+}
+
+// Test - IMPOSSIBLE to mock
+test('should fetch user', () async {
+  final repo = UserRepository();
+  final user = await repo.fetchUser('123'); // Makes REAL network call! 😱
+  
+  expect(user.name, 'John'); // Test fails if network is down
+});
+With GetIt - Easy to Test:
+dart// ✅ GetIt approach
+class UserRepository {
+  final ApiService apiService;
+  UserRepository(this.apiService); // Visible dependency
+}
+
+// Test - EASY to mock
+test('should fetch user', () async {
+  final mockApi = MockApiService();
+  final repo = UserRepository(mockApi); // Inject mock
+  
+  when(mockApi.getUser('123')).thenReturn(User(id: '123', name: 'John'));
+  
+  final user = await repo.fetchUser('123'); // No real network call!
+  expect(user.name, 'John'); // Always works
+});
+Problem 2: Initialization Order
+dart// ❌ Singleton initialization order nightmare
+class Database {
+  static final Database _instance = Database._internal();
+  factory Database() => _instance;
+  
+  Database._internal() {
+    // Depends on Config
+    final config = Config(); // What if Config depends on Database? 💣
+    _init(config);
+  }
+}
+
+class Config {
+  static final Config _instance = Config._internal();
+  factory Config() => _instance;
+  
+  Config._internal() {
+    // Might depend on Database
+    final db = Database(); // Circular dependency! 💥
+  }
+}
+
+// Runtime crash:
+// StackOverflowError: Config() → Database() → Config() → Database()...
+With GetIt - Controlled Order:
+dart// ✅ GetIt - explicit initialization order
+void setupDependencies() {
+  // 1. Register Config first (no dependencies)
+  getIt.registerSingleton<Config>(Config());
+  
+  // 2. Register Database second (depends on Config)
+  getIt.registerSingleton<Database>(
+    Database(getIt<Config>()) // Config already exists
+  );
+  
+  // No circular dependency possible!
+}
+Problem 3: Environment Switching
+dart// ❌ Singleton - can't switch environments
+class ApiService {
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  
+  final String baseUrl = 'https://api.production.com'; // Hardcoded!
+  
+  ApiService._internal();
+}
+
+// How do we switch to test server? 😢
+// - Can't change baseUrl after creation
+// - Can't have dev/staging/prod versions
+With GetIt - Easy Environment Switching:
+dart// ✅ GetIt - configure per environment
+void setupProduction() {
+  getIt.registerSingleton<ApiService>(
+    ApiService(baseUrl: 'https://api.production.com')
+  );
+}
+
+void setupDevelopment() {
+  getIt.registerSingleton<ApiService>(
+    ApiService(baseUrl: 'https://api.dev.com')
+  );
+}
+
+void setupTesting() {
+  getIt.registerSingleton<ApiService>(
+    MockApiService() // Completely different implementation!
+  );
+}
+
+void main() {
+  const environment = String.fromEnvironment('ENV');
+  
+  if (environment == 'prod') {
+    setupProduction();
+  } else if (environment == 'dev') {
+    setupDevelopment();
+  } else {
+    setupTesting();
+  }
+  
+  runApp(MyApp());
+}
+
+
+1. Static
+
+One shared value or method, no object needed.
+
+class Counter {
+  static int count = 0;
+
+  static void increment() {
+    count++;
+  }
+}
+
+// Usage
+Counter.increment();
+print(Counter.count);
+
+
+Key point:
+No instance is created. Everything is accessed directly from the class.
+
+2. Singleton
+
+Only one instance of a class is allowed.
+
+class Counter {
+  static final Counter _instance = Counter._internal();
+
+  int count = 0;
+
+  factory Counter() {
+    return _instance;
+  }
+
+  Counter._internal();
+
+  void increment() {
+    count++;
+  }
+}
+
+// Usage
+var counter1 = Counter();
+var counter2 = Counter();
+
+counter1.increment();
+print(counter2.count); // Same instance → prints 1
+
+
+Key point:
+You work with an object, but there is only one of it.
+
+3. GetIt (Service Locator / Dependency Injection)
+
+Instance is managed by a container.
+
+import 'package:get_it/get_it.dart';
+
+final getIt = GetIt.instance;
+
+class Counter {
+  int count = 0;
+  void increment() => count++;
+}
+
+// Registration
+void setup() {
+  getIt.registerSingleton<Counter>(Counter());
+}
+
+// Usage
+final counter = getIt<Counter>();
+counter.increment();
+print(counter.count);
+
+
+Key point:
+You don’t care how the object is created—GetIt handles it.
+
+Quick Comparison
+Feature	Static	Singleton	GetIt
+Instance-based	❌	✅	✅
+Only one instance	✅	✅	Optional
+Easy testing	❌	❌	✅
+Scales well	❌	⚠️	✅
+
+
+1️⃣ registerSingleton
+
+Creates immediately. One instance for the entire app.
+
+✅ Use when:
+
+Object is needed everywhere
+
+Initialization is cheap
+
+Must be ready at app start
+
+📌 Examples:
+
+App configuration
+
+Analytics service
+
+Logger
+
+getIt.registerSingleton<AnalyticsService>(AnalyticsService());
+
+
+➡ Same instance returned every time.
+
+2️⃣ registerLazySingleton
+
+Created only when first used. One instance after that.
+
+✅ Use when:
+
+Object is not always needed
+
+Initialization is expensive
+
+Still needs to be shared
+
+📌 Examples:
+
+API client
+
+Database service
+
+Auth service
+
+getIt.registerLazySingleton<ApiService>(() => ApiService());
+
+
+➡ Created on first access, then reused.
+
+3️⃣ registerFactory
+
+Creates a new instance every time.
+
+✅ Use when:
+
+Object holds UI state
+
+Must be fresh each time
+
+Short-lived objects
+
+📌 Examples:
+
+ViewModels
+
+Bloc / Cubit
+
+Controllers
+
+getIt.registerFactory<LoginViewModel>(() => LoginViewModel());
+
+
+➡ New object each call.
+
+🔁 Quick Comparison
+Method	Instance Count	Created When	Typical Use
+registerSingleton	One	App start	Global services
+registerLazySingleton	One	First use	Heavy services
+registerFactory	New each time	On request	UI state
