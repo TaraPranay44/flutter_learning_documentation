@@ -1,0 +1,3535 @@
+
+android/
+├── .gradle/                          # Gradle cache (auto-generated)
+│   ├── 8.4/
+│   │   ├── checksums/
+│   │   ├── dependencies-accessors/
+│   │   ├── executionHistory/
+│   │   ├── fileChanges/
+│   │   ├── fileHashes/
+│   │   └── vcsMetadata/
+│   ├── buildOutputCleanup/
+│   └── vcs-1/
+│
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── kotlin/com/getpos/getpos/
+│   │   │   │   └── MainActivity.kt    ⭐ App entry point
+│   │   │   ├── res/
+│   │   │   │   ├── mipmap-hdpi/      # 72x72 icons
+│   │   │   │   ├── mipmap-mdpi/      # 48x48 icons
+│   │   │   │   ├── mipmap-xhdpi/     # 96x96 icons
+│   │   │   │   ├── mipmap-xxhdpi/    # 144x144 icons
+│   │   │   │   ├── mipmap-xxxhdpi/   # 192x192 icons
+│   │   │   │   ├── drawable/         # Images, splash screens
+│   │   │   │   ├── values/           # Strings, colors, styles
+│   │   │   │   └── values-night/     # Dark mode overrides
+│   │   │   └── AndroidManifest.xml   ⭐ App permissions & config
+│   │   ├── debug/
+│   │   │   └── AndroidManifest.xml   # Debug-specific settings
+│   │   └── profile/
+│   │       └── AndroidManifest.xml   # Profile-specific settings
+│   │
+│   ├── build.gradle                  ⭐ App-level build config
+│   ├── proguard-rules.pro            ⭐ Code obfuscation rules
+│   └── .gitignore
+│
+├── gradle/
+│   └── wrapper/
+│       ├── gradle-wrapper.jar        # Gradle downloader
+│       └── gradle-wrapper.properties # Gradle version config
+│
+├── build.gradle                      ⭐ Project-level build config
+├── settings.gradle                   # Module inclusion
+├── gradle.properties                 # Global Gradle settings
+├── local.properties                  # SDK paths (gitignored)
+├── key.properties                    # Signing keys (gitignored)
+├── gradlew                           # Gradle script (Unix)
+├── gradlew.bat                       # Gradle script (Windows)
+└── .gitignore
+
+
+
+Complete Android Files Documentation for Flutter Projects
+🎯 Table of Contents
+
+Introduction
+Project Structure Overview
+Gradle System
+Build Configuration Files
+Source Code Files
+Manifest & Permissions
+ProGuard & Code Protection
+Signing & Security
+Cache & Generated Files
+Troubleshooting Guide
+
+
+<div id="introduction"></div>
+📖 Introduction
+What is the Android Folder?
+Think of the android/ folder as a translation layer between your Flutter app (written in Dart) and the Android operating system.
+Simple Analogy:
+
+Your Flutter app speaks "Dart" 🗣️
+Android phones speak "Android/Kotlin" 📱
+The android/ folder is the interpreter that helps them communicate
+
+Why Do You Need It?
+
+Native Features: Camera, GPS, Bluetooth need Android's native code
+App Store Deployment: Google Play requires proper Android configuration
+Permissions: Declare what your app needs (internet, camera, etc.)
+Customization: App icons, splash screens, deep linking
+Plugins: Flutter plugins use this folder to access native Android features
+
+
+<div id="project-structure"></div>
+🗂️ Project Structure Overview
+your_flutter_app/
+├── android/                          ← We're exploring THIS!
+│   ├── gradle/                       ← Gradle wrapper files
+│   │   └── wrapper/
+│   │       ├── gradle-wrapper.jar
+│   │       └── gradle-wrapper.properties
+│   ├── app/                          ← Your app's specific config
+│   │   ├── src/
+│   │   │   ├── main/
+│   │   │   │   ├── kotlin/          ← Kotlin source code
+│   │   │   │   │   └── com/getpos/getpos/
+│   │   │   │   │       └── MainActivity.kt
+│   │   │   │   ├── res/             ← Resources (icons, images)
+│   │   │   │   │   ├── mipmap-*/   ← App icons
+│   │   │   │   │   ├── drawable-*/  ← Images
+│   │   │   │   │   └── values/      ← Strings, colors
+│   │   │   │   └── AndroidManifest.xml
+│   │   │   ├── debug/               ← Debug-specific config
+│   │   │   └── profile/             ← Profile-specific config
+│   │   ├── build.gradle             ← App-level build config
+│   │   └── proguard-rules.pro       ← Code obfuscation rules
+│   ├── build.gradle                 ← Project-level build config
+│   ├── settings.gradle              ← Project settings
+│   ├── gradle.properties            ← Gradle settings
+│   ├── local.properties             ← Local machine paths
+│   ├── key.properties               ← Signing keys (SECRET!)
+│   ├── gradlew                      ← Gradle wrapper (Linux/Mac)
+│   └── gradlew.bat                  ← Gradle wrapper (Windows)
+├── lib/                              ← Your Flutter/Dart code
+└── pubspec.yaml                      ← Flutter dependencies
+🎨 Visual Guide to File Types
+IconTypeExamplesPurpose🔧Build Toolsbuild.gradle, settings.gradleConfigure how app is built📄Config FilesAndroidManifest.xml, gradle.propertiesDefine app settings💻Source CodeMainActivity.ktYour app's entry point🎨Resourcesres/, icons, imagesVisual assets🗂️Cache.gradle/, build/Temporary build files🔐Securitykey.properties, *.jksApp signing keys
+
+<div id="gradle-system"></div>
+⚙️ The Gradle System
+What is Gradle?
+Gradle = The "construction foreman" that builds your Android app.
+Real-World Analogy:
+Building a House          Building an Android App
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Architect's Blueprint  →  build.gradle files
+Construction Tools     →  Gradle software
+Building Materials     →  Dependencies (libraries)
+Foreman                →  Gradle Wrapper
+Final House            →  APK file
+Why Not Just Install Gradle?
+Problem: Different team members might have different Gradle versions installed.
+Solution: Gradle Wrapper - a small program that auto-downloads the correct version.
+
+📦 Gradle Wrapper Files
+1. gradle-wrapper.jar
+Location: android/gradle/wrapper/gradle-wrapper.jar
+What It Does
+
+A tiny Java program (~60 KB)
+Downloads and installs the correct Gradle version
+Ensures everyone uses the same version
+
+Real-World Analogy
+Like a USB installer that downloads the right software version automatically.
+When You'll See Errors
+bashError: Could not find gradle-wrapper.jar
+Fix:
+bashcd android
+flutter clean
+flutter pub get
+This regenerates the wrapper files.
+
+2. gradle-wrapper.properties
+Location: android/gradle/wrapper/gradle-wrapper.properties
+What It Contains
+propertiesdistributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-all.zip
+Line-by-Line Explanation
+LineMeaningExample ValuedistributionBaseWhere to store GradleGRADLE_USER_HOME (~/.gradle)distributionPathSubfolder for versionswrapper/distszipStoreBaseWhere to store downloadsSame as abovezipStorePathSubfolder for zipswrapper/distsdistributionUrlDownload linkGradle 8.4 full package
+The Important Part
+propertiesdistributionUrl=https\://services.gradle.org/distributions/gradle-8.4-all.zip
+                                                                    ↑
+                                                            Version number
+Changing Gradle Version:
+properties# Old version (might be slow or incompatible)
+distributionUrl=...gradle-7.0-all.zip
+
+# New version (faster, more features)
+distributionUrl=...gradle-8.4-all.zip
+```
+
+#### Common Errors
+
+**Error 1: Network Issue**
+```
+Could not download Gradle distribution from 'https://services.gradle.org/...'
+Causes:
+
+No internet connection
+Firewall blocking Gradle
+Corrupted download
+
+Fix:
+bash# 1. Check internet connection
+ping services.gradle.org
+
+# 2. Delete corrupted cache
+rm -rf ~/.gradle/wrapper/dists/gradle-8.4-all
+
+# 3. Re-download
+cd android
+./gradlew --version
+```
+
+**Error 2: Version Mismatch**
+```
+Minimum supported Gradle version is 8.0. Current version is 7.5.
+Fix:
+Update gradle-wrapper.properties:
+propertiesdistributionUrl=https\://services.gradle.org/distributions/gradle-8.4-all.zip
+
+3. gradlew and gradlew.bat
+Location:
+
+android/gradlew (Mac/Linux)
+android/gradlew.bat (Windows)
+
+What They Do
+Shell scripts that run Gradle commands without installing Gradle globally.
+Common Commands
+bash# Build debug APK
+./gradlew assembleDebug
+
+# Build release APK
+./gradlew assembleRelease
+
+# Clean build files
+./gradlew clean
+
+# Check dependencies
+./gradlew dependencies
+
+# Run tests
+./gradlew test
+
+# Install debug APK to connected device
+./gradlew installDebug
+Mac/Linux Permission Error
+bashError: Permission denied: ./gradlew
+Fix:
+bashchmod +x gradlew
+./gradlew assembleDebug
+What chmod +x does: Makes the file executable (runnable).
+
+<div id="build-files"></div>
+🔧 Build Configuration Files
+
+📄 1. build.gradle (Project-Level)
+Location: android/build.gradle
+Purpose: Master configuration for the ENTIRE project (all modules, all plugins).
+Complete File with Explanations
+gradle// ══════════════════════════════════════════════════════
+// SECTION 1: BUILD SCRIPT CONFIGURATION
+// ══════════════════════════════════════════════════════
+buildscript {
+    // Global variables (reusable values)
+    ext {
+        kotlin_version = '1.9.22'     // Kotlin language version
+        min_sdk_version = 21           // Minimum Android version
+        compile_sdk_version = 34       // Compile against Android 14
+        target_sdk_version = 34        // Target Android 14
+    }
+    
+    // Where to download build tools from
+    repositories {
+        google()        // Google's Maven repo (Android, Firebase)
+        mavenCentral()  // Community libraries
+    }
+    
+    // Build tools needed
+    dependencies {
+        // Android Gradle Plugin (builds APK files)
+        classpath 'com.android.tools.build:gradle:8.1.0'
+        
+        // Kotlin compiler
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        
+        // Google Services (Firebase, Maps, etc.)
+        // classpath 'com.google.gms:google-services:4.4.0'
+        
+        // Crashlytics (crash reporting)
+        // classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
+    }
+}
+
+// ══════════════════════════════════════════════════════
+// SECTION 2: ALL PROJECTS CONFIGURATION
+// ══════════════════════════════════════════════════════
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        
+        // Custom repository (if needed)
+        // maven { url 'https://jitpack.io' }
+    }
+}
+
+// ══════════════════════════════════════════════════════
+// SECTION 3: ROOT PROJECT CONFIGURATION
+// ══════════════════════════════════════════════════════
+
+// Where to put build outputs
+rootProject.buildDir = '../build'
+
+// Where each subproject puts its build files
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+    
+    // Evaluate project settings after configuration
+    project.evaluationDependsOn(':app')
+}
+
+// ══════════════════════════════════════════════════════
+// SECTION 4: CLEANUP TASK
+// ══════════════════════════════════════════════════════
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
+Deep Dive: ext Variables
+What ext Means:
+
+ext = "extensions" = global variables
+Available to ALL modules in the project
+
+Example Usage:
+gradle// Define in build.gradle (project)
+ext {
+    kotlin_version = '1.9.22'
+    firebase_version = '32.7.0'
+    retrofit_version = '2.9.0'
+}
+
+// Use in build.gradle (app)
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "com.google.firebase:firebase-auth:$firebase_version"
+    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+}
+Benefits:
+
+Change version once, updates everywhere
+Easier to maintain
+Prevents version conflicts
+
+Deep Dive: Repositories
+gradlerepositories {
+    google()        // ← What does this do?
+    mavenCentral()
+}
+```
+
+**What Happens:**
+```
+1. You add: implementation 'com.google.firebase:firebase-auth:22.0.0'
+   
+2. Gradle searches:
+   ├─ google() → https://dl.google.com/dl/android/maven2/
+   │  └─ Finds: com/google/firebase/firebase-auth/22.0.0/firebase-auth-22.0.0.aar
+   │     └─ Downloads to: ~/.gradle/caches/modules-2/files-2.1/
+   │
+   └─ If not found, tries mavenCentral()
+Custom Repository Example:
+gradlerepositories {
+    google()
+    mavenCentral()
+    
+    // JitPack (for GitHub libraries)
+    maven { url 'https://jitpack.io' }
+    
+    // Local repository
+    maven { url '../local-repo' }
+    
+    // Private repository with credentials
+    maven {
+        url 'https://company.com/maven'
+        credentials {
+            username = project.findProperty("repoUser") ?: "default"
+            password = project.findProperty("repoPassword") ?: "default"
+        }
+    }
+}
+Deep Dive: Dependencies (classpath)
+gradledependencies {
+    classpath 'com.android.tools.build:gradle:8.1.0'
+}
+```
+
+**Dependency Anatomy:**
+```
+com.android.tools.build : gradle : 8.1.0
+         ↓                   ↓        ↓
+    Group ID            Artifact  Version
+   (Publisher)          (Package) (Which)
+Common Classpaths:
+ClasspathPurposeWhen Neededcom.android.tools.build:gradleBuild Android appsAlwaysorg.jetbrains.kotlin:kotlin-gradle-pluginCompile Kotlin codeIf using Kotlincom.google.gms:google-servicesFirebase/Google Play ServicesIf using Firebasecom.google.firebase:firebase-crashlytics-gradleCrash reportingIf using Crashlyticscom.google.dagger:hilt-android-gradle-pluginDependency injectionIf using Hilt
+
+📄 2. build.gradle (App-Level)
+Location: android/app/build.gradle
+Purpose: Configuration for YOUR SPECIFIC APP (package name, versions, libraries).
+Complete File with Explanations
+gradle// ══════════════════════════════════════════════════════
+// SECTION 1: PLUGINS
+// ══════════════════════════════════════════════════════
+plugins {
+    id "com.android.application"              // This is an Android app
+    id "kotlin-android"                        // Uses Kotlin language
+    id "dev.flutter.flutter-gradle-plugin"    // Flutter support
+    
+    // Optional plugins:
+    // id "com.google.gms.google-services"     // Firebase
+    // id "com.google.firebase.crashlytics"    // Crashlytics
+    // id "kotlin-kapt"                         // Kotlin annotation processing
+}
+
+// ══════════════════════════════════════════════════════
+// SECTION 2: LOAD FLUTTER VERSION
+// ══════════════════════════════════════════════════════
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+// ══════════════════════════════════════════════════════
+// SECTION 3: LOAD SIGNING KEYS
+// ══════════════════════════════════════════════════════
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+// ══════════════════════════════════════════════════════
+// SECTION 4: ANDROID CONFIGURATION
+// ══════════════════════════════════════════════════════
+android {
+    // ─────────────────────────────────────────────────
+    // 4.1: Basic Settings
+    // ─────────────────────────────────────────────────
+    namespace 'com.getpos.getpos'    // Package name
+    compileSdk 34                     // Android 14 SDK
+    
+    // ─────────────────────────────────────────────────
+    // 4.2: Compilation Options
+    // ─────────────────────────────────────────────────
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8  // Java 8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    
+    kotlinOptions {
+        jvmTarget = '1.8'  // Kotlin → Java 8 bytecode
+    }
+    
+    // ─────────────────────────────────────────────────
+    // 4.3: Default Configuration
+    // ─────────────────────────────────────────────────
+    defaultConfig {
+        // Unique app ID (MUST be unique on Play Store)
+        applicationId "com.getpos.getpos"
+        
+        // Minimum Android version
+        minSdk 21      // Android 5.0 (Lollipop) - 2014
+        
+        // Target Android version
+        targetSdk 34   // Android 14 - 2023
+        
+        // Version numbers
+        versionCode flutterVersionCode.toInteger()  // 1, 2, 3...
+        versionName flutterVersionName               // "1.0", "2.0"...
+        
+        // Enable multidex (if app is large)
+        // multiDexEnabled true
+        
+        // Test runner
+        // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    
+    // ─────────────────────────────────────────────────
+    // 4.4: Signing Configurations
+    // ─────────────────────────────────────────────────
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+    
+    // ─────────────────────────────────────────────────
+    // 4.5: Build Types
+    // ─────────────────────────────────────────────────
+    buildTypes {
+        release {
+            // Code shrinking (remove unused code)
+            minifyEnabled true
+            
+            // Resource shrinking (remove unused images)
+            shrinkResources true
+            
+            // ProGuard rules
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 
+                          'proguard-rules.pro'
+            
+            // Sign with release key
+            signingConfig signingConfigs.release
+            
+            // Build config fields (accessible in code)
+            buildConfigField "String", "API_URL", '"https://api.production.com"'
+            buildConfigField "boolean", "DEBUG_MODE", "false"
+        }
+        
+        debug {
+            // Keep everything for debugging
+            minifyEnabled false
+            shrinkResources false
+            
+            // Different app ID (can install alongside release)
+            applicationIdSuffix ".debug"
+            
+            // Debug version name
+            versionNameSuffix "-DEBUG"
+            
+            // Build config
+            buildConfigField "String", "API_URL", '"https://api.staging.com"'
+            buildConfigField "boolean", "DEBUG_MODE", "true"
+        }
+    }
+    
+    // ─────────────────────────────────────────────────
+    // 4.6: Build Features
+    // ─────────────────────────────────────────────────
+    buildFeatures {
+        // Generate BuildConfig class
+        buildConfig = true
+        
+        // View binding (Android views)
+        // viewBinding = true
+    }
+    
+    // ─────────────────────────────────────────────────
+    // 4.7: Lint Options
+    // ─────────────────────────────────────────────────
+    lintOptions {
+        // Don't abort build on errors
+        abortOnError false
+        
+        // Check for these issues
+        checkReleaseBuilds true
+        
+        // Disable specific checks
+        disable 'InvalidPackage'
+    }
+    
+    // ─────────────────────────────────────────────────
+    // 4.8: Packaging Options
+    // ─────────────────────────────────────────────────
+    packagingOptions {
+        // Exclude duplicate files
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+    }
+}
+
+// ══════════════════════════════════════════════════════
+// SECTION 5: FLUTTER CONFIGURATION
+// ══════════════════════════════════════════════════════
+flutter {
+    source '../..'
+}
+
+// ══════════════════════════════════════════════════════
+// SECTION 6: DEPENDENCIES
+// ══════════════════════════════════════════════════════
+dependencies {
+    // ─────────────────────────────────────────────────
+    // Kotlin
+    // ─────────────────────────────────────────────────
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    
+    // ─────────────────────────────────────────────────
+    // AndroidX Libraries
+    // ─────────────────────────────────────────────────
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    
+    // ─────────────────────────────────────────────────
+    // Material Design
+    // ─────────────────────────────────────────────────
+    implementation 'com.google.android.material:material:1.11.0'
+    
+    // ─────────────────────────────────────────────────
+    // Lifecycle
+    // ─────────────────────────────────────────────────
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
+    
+    // ─────────────────────────────────────────────────
+    // Multidex (if app is large)
+    // ─────────────────────────────────────────────────
+    // implementation 'androidx.multidex:multidex:2.0.1'
+    
+    // ─────────────────────────────────────────────────
+    // Firebase (using BOM for version management)
+    // ─────────────────────────────────────────────────
+    // implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    // implementation 'com.google.firebase:firebase-analytics'
+    // implementation 'com.google.firebase:firebase-crashlytics'
+    // implementation 'com.google.firebase:firebase-messaging'
+    
+    // ─────────────────────────────────────────────────
+    // Networking
+    // ─────────────────────────────────────────────────
+    // implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    // implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    // implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    // implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+    
+    // ─────────────────────────────────────────────────
+    // Image Loading
+    // ─────────────────────────────────────────────────
+    // implementation 'com.github.bumptech.glide:glide:4.16.0'
+    
+    // ─────────────────────────────────────────────────
+    // Testing
+    // ─────────────────────────────────────────────────
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+// ══════════════════════════════════════════════════════
+// SECTION 7: APPLY PLUGINS (Must be at end)
+// ══════════════════════════════════════════════════════
+// apply plugin: 'com.google.gms.google-services'
+// apply plugin: 'com.google.firebase.crashlytics'
+🔍 Deep Dive: Key Sections
+1. Package Name (namespace & applicationId)
+gradleandroid {
+    namespace 'com.getpos.getpos'
+    
+    defaultConfig {
+        applicationId "com.getpos.getpos"
+    }
+}
+What's the Difference?
+AspectnamespaceapplicationIdPurposeCode organizationPlay Store IDUsed ByKotlin/Java filesAndroid systemCan Differ?YesYesExamplecom.company.myappcom.company.myapp.free
+Real-World Example:
+gradle// Free version
+namespace 'com.company.myapp'
+applicationId "com.company.myapp.free"
+
+// Pro version (different build variant)
+namespace 'com.company.myapp'
+applicationId "com.company.myapp.pro"
+Why Separate?
+
+Both apps can be installed simultaneously
+Share same codebase (namespace)
+Different listings on Play Store (applicationId)
+
+2. SDK Versions
+gradleandroid {
+    compileSdk 34
+    
+    defaultConfig {
+        minSdk 21
+        targetSdk 34
+    }
+}
+```
+
+**Visual Explanation:**
+```
+Android Version Timeline:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+API 21 │ Android 5.0  (2014) ─────────────────────────┐
+API 23 │ Android 6.0  (2015)                           │ minSdk = 21
+API 26 │ Android 8.0  (2017)                           │ "Works on these"
+API 29 │ Android 10   (2019)                           │
+API 30 │ Android 11   (2020)                           │
+API 33 │ Android 13   (2022)                           │
+API 34 │ Android 14   (2023) ◄─ targetSdk & compileSdk ┘
+                                   "Optimized for this"
+Choosing minSdk:
+Min SDKCoverageTrade-offsAPI 2199%No fingerprint, old permissionsAPI 2398%Runtime permissionsAPI 2695%Notification channelsAPI 3085%Scoped storage
+Example Decision:
+gradle// E-commerce app (needs maximum reach)
+minSdk 21  // 99% of users
+
+// Banking app (needs biometrics)
+minSdk 23  // Fingerprint API available
+
+// Modern app (uses latest features)
+minSdk 26  // Notification channels, auto-fill
+3. Version Code vs Version Name
+gradledefaultConfig {
+    versionCode 15        // Internal counter
+    versionName "2.3.1"   // User-facing version
+}
+```
+
+**Version Evolution Example:**
+
+| Release | versionCode | versionName | Description |
+|---------|-------------|-------------|-------------|
+| Initial | 1 | "1.0" | First release |
+| Bug fix | 2 | "1.0.1" | Fixed crash |
+| Feature | 3 | "1.1" | Added dark mode |
+| Major | 4 | "2.0" | Complete redesign |
+| Hotfix | 5 | "2.0.1" | Security patch |
+
+**Play Store Rule:**
+```
+Each new upload MUST have versionCode > previous upload
+```
+
+**Semantic Versioning:**
+```
+versionName "2.3.1"
+             ↑ ↑ ↑
+             │ │ └─ Patch (bug fixes)
+             │ └─── Minor (new features)
+             └───── Major (breaking changes)
+4. Build Types (Debug vs Release)
+gradlebuildTypes {
+    debug {
+        minifyEnabled false
+        applicationIdSuffix ".debug"
+        buildConfigField "String", "API_URL", '"https://staging.api.com"'
+    }
+    
+    release {
+        minifyEnabled true
+        shrinkResources true
+        proguardFiles ...
+        buildConfigField "String", "API_URL", '"https://api.com"'
+    }
+}
+Comparison:
+FeatureDebug BuildRelease BuildSpeedFast (1-2 min)Slow (5-10 min)SizeLarge (50 MB)Small (15 MB)Obfuscation❌ No✅ YesLogging✅ Verbose❌ MinimalAPIStagingProductionApp IDcom.app.debugcom.appInstall Together✅ Yes✅ Yes
+Using BuildConfig in Code:
+kotlin// MainActivity.kt
+class MainActivity : FlutterActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        val apiUrl = BuildConfig.API_URL
+        Log.d("API", "Using: $apiUrl")
+        
+        if (BuildConfig.DEBUG) {
+            // Enable debug tools
+            enableStrictMode()
+        }
+    }
+}
+5. Dependencies Explained
+gradledependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+}
+Dependency Types:
+TypeScopeExample Use CaseimplementationThis module onlyMost dependenciesapiThis + dependent modulesShared librariescompileOnlyCompile time onlyAnnotationsruntimeOnlyRuntime onlyDatabase driverstestImplementationUnit testsJUnitandroidTestImplementationAndroid testsEspressodebugImplementationDebug builds onlyLeak detectionreleaseImplementationRelease builds onlyAnalytics
+Example Scenarios:Continue1:02 AMgradledependencies {
+    // Regular dependency
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    
+    // Expose to other modules
+    api 'com.google.code.gson:gson:2.10.1'
+    
+    // Annotation processor
+    kapt 'com.google.dagger:dagger-compiler:2.48'
+    
+    // Debug tools only
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
+    
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+Firebase BOM (Bill of Materials):
+gradle// WITHOUT BOM (version conflicts possible)
+dependencies {
+    implementation 'com.google.firebase:firebase-analytics:21.0.0'
+    implementation 'com.google.firebase:firebase-auth:22.0.0'
+    implementation 'com.google.firebase:firebase-firestore:24.0.0'
+}
+
+// WITH BOM (versions auto-managed)
+dependencies {
+    // BOM specifies all versions
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    
+    // No version numbers needed!
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
+}
+
+📄 3. settings.gradle
+Location: android/settings.gradle
+Purpose: Tells Gradle which modules to include in the build.
+Complete File
+gradle// ══════════════════════════════════════════════════════
+// PLUGIN MANAGEMENT
+// ══════════════════════════════════════════════════════
+pluginManagement {
+    // Where to find plugins
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+// ══════════════════════════════════════════════════════
+// INCLUDE MAIN APP MODULE
+// ══════════════════════════════════════════════════════
+include ':app'
+
+// ══════════════════════════════════════════════════════
+// AUTO-INCLUDE FLUTTER PLUGINS
+// ══════════════════════════════════════════════════════
+def flutterProjectRoot = rootProject.projectDir.parentFile.toPath()
+
+// Read .flutter-plugins file
+def plugins = new Properties()
+def pluginsFile = new File(flutterProjectRoot.toFile(), '.flutter-plugins')
+if (pluginsFile.exists()) {
+    pluginsFile.withReader('UTF-8') { reader -> plugins.load(reader) }
+}
+
+// Include each plugin
+plugins.each { name, path ->
+    def pluginDirectory = flutterProjectRoot.resolve(path).resolve('android').toFile()
+    if (pluginDirectory.exists()) {
+        include ":$name"
+        project(":$name").projectDir = pluginDirectory
+    }
+}
+
+// ══════════════════════════════════════════════════════
+// OPTIONAL: CUSTOM MODULES
+// ══════════════════════════════════════════════════════
+// include ':my_custom_module'
+// project(':my_custom_module').projectDir = new File(rootProject.projectDir, '../my_custom_module/android')
+```
+
+### What This Does
+
+**Visual Representation:**
+```
+Your Project Structure:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+settings.gradle says: "Include these modules"
+  │
+  ├─ :app (your main app)
+  │
+  ├─ :camera (Flutter camera plugin)
+  │
+  ├─ :path_provider (Flutter path_provider plugin)
+  │
+  └─ :shared_preferences (Flutter shared_preferences plugin)
+
+Gradle builds them all together!
+```
+
+**What `.flutter-plugins` Contains:**
+```
+# This file is generated by Flutter
+camera=/Users/you/.pub-cache/hosted/pub.dev/camera-0.10.5+5/
+path_provider=/Users/you/.pub-cache/hosted/pub.dev/path_provider-2.1.1/
+shared_preferences=/Users/you/.pub-cache/hosted/pub.dev/shared_preferences-2.2.2/
+
+📄 4. gradle.properties
+Location: android/gradle.properties
+Purpose: Global Gradle settings (memory, parallel builds, feature flags).
+Complete File
+properties# ══════════════════════════════════════════════════════
+# GRADLE JVM SETTINGS
+# ══════════════════════════════════════════════════════
+
+# Allocate 4 GB RAM to Gradle (adjust based on your machine)
+org.gradle.jvmargs=-Xmx4096m
+
+# Use daemon (speeds up builds by keeping Gradle in memory)
+org.gradle.daemon=true
+
+# Enable parallel execution (build modules simultaneously)
+org.gradle.parallel=true
+
+# Enable build cache (reuse outputs from previous builds)
+org.gradle.caching=true
+
+# ══════════════════════════════════════════════════════
+# ANDROID SETTINGS
+# ══════════════════════════════════════════════════════
+
+# Use AndroidX libraries (modern Android libraries)
+android.useAndroidX=true
+
+# Auto-migrate old support libraries to AndroidX
+android.enableJetifier=true
+
+# Enable R8 (modern code shrinker, replaces ProGuard)
+android.enableR8=true
+
+# Full R8 mode (more aggressive optimization)
+android.enableR8.fullMode=true
+
+# ══════════════════════════════════════════════════════
+# KOTLIN SETTINGS
+# ══════════════════════════════════════════════════════
+
+# Kotlin code generation (JVM target)
+kotlin.code.style=official
+
+# Incremental compilation (faster Kotlin builds)
+kotlin.incremental=true
+
+# ══════════════════════════════════════════════════════
+# PERFORMANCE TUNING
+# ══════════════════════════════════════════════════════
+
+# Configure on demand (only build changed modules)
+# org.gradle.configureondemand=true
+
+# Increase file watcher limits (for large projects)
+# org.gradle.vfs.watch=true
+
+# ══════════════════════════════════════════════════════
+# CUSTOM PROPERTIES (accessible in build.gradle)
+# ══════════════════════════════════════════════════════
+
+# Your custom properties
+# myCustomProperty=someValue
+Deep Dive: Memory Settings
+propertiesorg.gradle.jvmargs=-Xmx4096m
+                     ↑
+                  Max heap size
+```
+
+**Choosing the Right Value:**
+
+| Machine RAM | Recommended `-Xmx` | When to Use |
+|-------------|-------------------|-------------|
+| 8 GB | `-Xmx2048m` | Small projects |
+| 16 GB | `-Xmx4096m` | Medium projects |
+| 32 GB+ | `-Xmx8192m` | Large projects with many plugins |
+
+**Error Example:**
+```
+Error: OutOfMemoryError: Java heap space
+Fix:
+properties# Increase from 2 GB to 4 GB
+org.gradle.jvmargs=-Xmx4096m
+Warning:
+Don't set -Xmx higher than 75% of your total RAM!
+Deep Dive: AndroidX
+propertiesandroid.useAndroidX=true
+android.enableJetifier=true
+What is AndroidX?
+
+Old: android.support.v7.app.AppCompatActivity
+New: androidx.appcompat.app.AppCompatActivity
+
+What Jetifier Does:
+Automatically converts old support libraries to AndroidX.
+Example:
+kotlin// Old dependency in build.gradle
+implementation 'com.android.support:appcompat-v7:28.0.0'
+
+// Jetifier converts it to:
+implementation 'androidx.appcompat:appcompat:1.6.1'
+
+<div id="source-files"></div>
+💻 Source Code Files
+
+📄 MainActivity.kt
+Location: android/app/src/main/kotlin/com/getpos/getpos/MainActivity.kt
+Purpose: The "front door" of your app - where Android passes control to Flutter.
+Basic MainActivity (Standard)
+kotlin// ══════════════════════════════════════════════════════
+// PACKAGE DECLARATION (must match namespace in build.gradle)
+// ══════════════════════════════════════════════════════
+package com.getpos.getpos
+
+// ══════════════════════════════════════════════════════
+// IMPORTS
+// ══════════════════════════════════════════════════════
+import io.flutter.embedding.android.FlutterActivity
+
+// ══════════════════════════════════════════════════════
+// MAIN ACTIVITY CLASS
+// ══════════════════════════════════════════════════════
+class MainActivity: FlutterActivity() {
+    // That's it! Flutter handles everything else
+}
+```
+
+**What Happens Here:**
+```
+User Taps App Icon
+      ↓
+Android OS
+      ↓
+Reads AndroidManifest.xml
+      ↓
+Finds MainActivity as launcher
+      ↓
+Creates MainActivity instance
+      ↓
+MainActivity extends FlutterActivity
+      ↓
+FlutterActivity:
+  ├─ Creates Flutter engine
+  ├─ Loads Dart code
+  ├─ Renders Flutter widgets
+  └─ Handles touch, keyboard, sensors
+Advanced MainActivity (with Method Channels)
+kotlinpackage com.getpos.getpos
+
+// ══════════════════════════════════════════════════════
+// ANDROID IMPORTS
+// ══════════════════════════════════════════════════════
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.util.Log
+import androidx.annotation.NonNull
+
+// ══════════════════════════════════════════════════════
+// FLUTTER IMPORTS
+// ══════════════════════════════════════════════════════
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
+
+// ══════════════════════════════════════════════════════
+// MAIN ACTIVITY CLASS
+// ══════════════════════════════════════════════════════
+class MainActivity: FlutterActivity() {
+    
+    // ──────────────────────────────────────────────────
+    // CONSTANTS
+    // ──────────────────────────────────────────────────
+    private val TAG = "MainActivity"
+    private val CHANNEL_BATTERY = "com.getpos/battery"
+    private val CHANNEL_DEVICE = "com.getpos/device"
+    
+    // ──────────────────────────────────────────────────
+    // FLUTTER ENGINE CONFIGURATION
+    // ──────────────────────────────────────────────────
+    override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        
+        // Setup battery channel
+        setupBatteryChannel(flutterEngine)
+        
+        // Setup device channel
+        setupDeviceChannel(flutterEngine)
+    }
+    
+    // ──────────────────────────────────────────────────
+    // BATTERY CHANNEL SETUP
+    // ──────────────────────────────────────────────────
+    private fun setupBatteryChannel(flutterEngine: FlutterEngine) {
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            CHANNEL_BATTERY
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getBatteryLevel" -> {
+                    val batteryLevel = getBatteryLevel()
+                    
+                    if (batteryLevel != -1) {
+                        result.success(batteryLevel)
+                    } else {
+                        result.error(
+                            "UNAVAILABLE",
+                            "Battery level not available.",
+                            null
+                        )
+                    }
+                }
+                
+                "getBatteryStatus" -> {
+                    val status = getBatteryStatus()
+                    result.success(status)
+                }
+                
+                else -> {
+                    result.notImplemented()
+                }
+            }
+        }
+    }
+    
+    // ──────────────────────────────────────────────────
+    // DEVICE CHANNEL SETUP
+    // ──────────────────────────────────────────────────
+    private fun setupDeviceChannel(flutterEngine: FlutterEngine) {
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            CHANNEL_DEVICE
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "vibrate" -> {
+                    val duration = call.argument<Int>("duration") ?: 500
+                    vibrate(duration)
+                    result.success(null)
+                }
+                
+                "getDeviceInfo" -> {
+                    val info = getDeviceInfo()
+                    result.success(info)
+                }
+                
+                else -> {
+                    result.notImplemented()
+                }
+            }
+        }
+    }
+    
+    // ══════════════════════════════════════════════════
+    // NATIVE METHODS
+    // ══════════════════════════════════════════════════
+    
+    /**
+     * Get current battery level (0-100)
+     */
+    private fun getBatteryLevel(): Int {
+        val batteryLevel: Int
+        
+        if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+            // Modern approach (API 21+)
+            val batteryManager = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+            batteryLevel = batteryManager.getIntProperty(
+                BatteryManager.BATTERY_PROPERTY_CAPACITY
+            )
+        } else {
+            // Legacy approach (API < 21)
+            val intent = registerReceiver(
+                null,
+                IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            )
+            
+            val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+            val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+            
+            batteryLevel = if (level != -1 && scale != -1) {
+                (level * 100 / scale)
+            } else {
+                -1
+            }
+        }
+        
+        Log.d(TAG, "Battery level: $batteryLevel%")
+        return batteryLevel
+    }
+    
+    /**
+     * Get battery charging status
+     */
+    private fun getBatteryStatus(): String {
+        val intent = registerReceiver(
+            null,
+            IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        )
+        
+        val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+        
+        return when (status) {
+            BatteryManager.BATTERY_STATUS_CHARGING -> "charging"
+            BatteryManager.BATTERY_STATUS_DISCHARGING -> "discharging"
+            BatteryManager.BATTERY_STATUS_FULL -> "full"
+            BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "not_charging"
+            else -> "unknown"
+        }
+    }
+    
+    /**
+     * Vibrate the device
+     */
+    private fun vibrate(duration: Int) {
+        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        
+        if (VERSION.SDK_INT >= VERSION_CODES.O) {
+            // Modern approach (API 26+)
+            vibrator.vibrate(
+                VibrationEffect.createOneShot(
+                    duration.toLong(),
+                    VibrationEffect.DEFAULT_AMPLITUDE
+                )
+            )
+        } else {
+            // Legacy approach (API < 26)
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(duration.toLong())
+        }
+        
+        Log.d(TAG, "Vibrated for ${duration}ms")
+    }
+    
+    /**
+     * Get device information
+     */
+    private fun getDeviceInfo(): Map<String, String> {
+        return mapOf(
+            "manufacturer" to Build.MANUFACTURER,
+            "model" to Build.MODEL,
+            "androidVersion" to VERSION.RELEASE,
+            "sdkInt" to VERSION.SDK_INT.toString(),
+            "board" to Build.BOARD,
+            "brand" to Build.BRAND
+        )
+    }
+    
+    // ══════════════════════════════════════════════════
+    // LIFECYCLE METHODS (Optional)
+    // ══════════════════════════════════════════════════
+    
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG, "Activity resumed")
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG, "Activity paused")
+    }
+}
+Flutter Side (Dart Code)
+dartimport 'package:flutter/services.dart';
+
+// ══════════════════════════════════════════════════════
+// BATTERY MANAGER
+// ══════════════════════════════════════════════════════
+class BatteryManager {
+  static const platform = MethodChannel('com.getpos/battery');
+  
+  /// Get battery level (0-100)
+  static Future<int> getBatteryLevel() async {
+    try {
+      final int result = await platform.invokeMethod('getBatteryLevel');
+      return result;
+    } on PlatformException catch (e) {
+      print("Failed to get battery level: '${e.message}'.");
+      return -1;
+    }
+  }
+  
+  /// Get battery status (charging, discharging, etc.)
+  static Future<String> getBatteryStatus() async {
+    try {
+      final String result = await platform.invokeMethod('getBatteryStatus');
+      return result;
+    } catch (e) {
+      print("Failed to get battery status: $e");
+      return 'unknown';
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// DEVICE MANAGER
+// ══════════════════════════════════════════════════════
+class DeviceManager {
+  static const platform = MethodChannel('com.getpos/device');
+  
+  /// Vibrate device for specified duration (milliseconds)
+  static Future<void> vibrate({int duration = 500}) async {
+    try {
+      await platform.invokeMethod('vibrate', {'duration': duration});
+    } catch (e) {
+      print("Failed to vibrate: $e");
+    }
+  }
+  
+  /// Get device information
+  static Future<Map<String, String>> getDeviceInfo() async {
+    try {
+      final Map result = await platform.invokeMethod('getDeviceInfo');
+      return Map<String, String>.from(result);
+    } catch (e) {
+      print("Failed to get device info: $e");
+      return {};
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// USAGE EXAMPLE
+// ══════════════════════════════════════════════════════
+void main() async {
+  // Get battery level
+  int batteryLevel = await BatteryManager.getBatteryLevel();
+  print('Battery: $batteryLevel%');
+  
+  // Get battery status
+  String status = await BatteryManager.getBatteryStatus();
+  print('Status: $status');
+  
+  // Vibrate for 1 second
+  await DeviceManager.vibrate(duration: 1000);
+  
+  // Get device info
+  Map<String, String> info = await DeviceManager.getDeviceInfo();
+  print('Device: ${info['manufacturer']} ${info['model']}');
+  print('Android: ${info['androidVersion']}');
+}
+```
+
+### Method Channel Flow Diagram
+```
+Flutter (Dart)                    Android (Kotlin)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     │                                   │
+     │  1. Call method                   │
+     ├──────────────────────────────────>│
+     │  platform.invokeMethod(           │
+     │    'getBatteryLevel'              │
+     │  )                                │
+     │                                   │
+     │                              2. Execute
+     │                              getBatteryLevel()
+     │                                   │
+     │  3. Return result                 │
+     │<──────────────────────────────────┤
+     │  result.success(75)               │
+     │                                   │
+
+<div id="manifest"></div>
+📄 AndroidManifest.xml
+Location: android/app/src/main/AndroidManifest.xml
+Purpose: Your app's "passport" - declares identity, permissions, and components.
+Complete AndroidManifest.xml
+xml<?xml version="1.0" encoding="utf-8"?>
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- ROOT MANIFEST TAG                                              -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.getpos.getpos">
+    
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- PERMISSIONS SECTION                                        -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    
+    <!-- ────────────────────────────────────────────────────────── -->
+    <!-- NORMAL PERMISSIONS (Auto-granted)                          -->
+    <!-- ────────────────────────────────────────────────────────── -->
+    
+    <!-- Internet access (REQUIRED for most apps) -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    
+    <!-- Check network state -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    
+    <!-- Vibrate the device -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    
+    <!-- Wake lock (keep screen on) -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    
+    <!-- Receive boot completed (start service on boot) -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    
+    <!-- ────────────────────────────────────────────────────────── -->
+    <!-- DANGEROUS PERMISSIONS (User must approve)                  -->
+    <!-- ────────────────────────────────────────────────────────── -->
+    
+    <!-- Camera -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    
+    <!-- Location (GPS) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    
+    <!-- Background location (Android 10+) -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    
+    <!-- Storage (Android 9 and below) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"/>
+    
+    <!-- Storage (Android 13+) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+    
+    <!-- Microphone (audio recording) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    
+    <!-- Contacts -->
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
+    
+    <!-- Phone calls -->
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    
+    <!-- SMS -->
+    <uses-permission android:name="android.permission.SEND_SMS"/>
+    <uses-permission android:name="android.permission.READ_SMS"/>
+    
+    <!-- Bluetooth (Android 11 and below) -->
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    
+    <!-- Bluetooth (Android 12+) -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE"/>
+    
+    <!-- Notifications (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- HARDWARE FEATURES                                          -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    
+    <!-- Camera hardware (NOT required) -->
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    
+    <!-- GPS hardware (NOT required) -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
+    
+    <!-- Touchscreen (required by default) -->
+    <uses-feature android:name="android.hardware.touchscreen" android:required="true"/>
+    
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- APPLICATION SECTION                                        -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <application
+        android:label="GetPos"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:usesCleartextTraffic="true"
+        android:requestLegacyExternalStorage="true"
+        android:enableOnBackInvokedCallback="true"
+        android:hardwareAccelerated="true"
+        android:largeHeap="true"
+        android:networkSecurityConfig="@xml/network_security_config">
+        
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!-- MAIN ACTIVITY (App Entry Point)                       -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait">
+            
+            <!-- Intent filter: Make this the launcher activity -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            
+            <!-- Deep linking: myapp://product/123 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="myapp" android:host="product"/>
+            </intent-filter>
+            
+            <!-- Web links: https://myapp.com/product/123 -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data 
+                    android:scheme="https"
+                    android:host="myapp.com"
+                    android:pathPrefix="/product"/>
+            </intent-filter>
+        </activity>
+        
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!-- SERVICES                                               -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        
+        <!-- Firebase Cloud Messaging -->
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+        
+        <!-- Background service -->
+        <service
+            android:name=".MyBackgroundService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location"/>
+        
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!-- BROADCAST RECEIVERS                                    -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        
+        <!-- Boot receiver (start on device boot) -->
+        <receiver
+            android:name=".MyBootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+        
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!-- CONTENT PROVIDERS                                      -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        
+        <!-- File provider (for sharing files) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
+        </provider>
+        
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!-- META-DATA                                              -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        
+        <!-- Google Maps API key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="YOUR_API_KEY_HERE"/>
+        
+        <!-- Flutter embedding version -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2"/>
+        
+        <!-- AdMob App ID -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY"/>
+    </application>
+</manifest>
+🔍 Deep Dive: Permissions
+Permission Categories
+CategoryDescriptionExampleUser ActionNormalLow risk, auto-grantedINTERNET, VIBRATENoneDangerousPrivacy riskCAMERA, LOCATIONMust approveSignatureSystem/same developerINSTALL_PACKAGESAuto (if signed)SpecialSensitive operationsSYSTEM_ALERT_WINDOWSettings toggle
+Runtime Permission Flow
+Your App Needs Camera
+        ↓
+1. Declare in AndroidManifest.xml:
+   <uses-permission android:name="android.permission.CAMERA"/>
+        ↓
+2. Check if granted (Dart):
+   if (await Permission.camera.isGranted) {
+     //Continue1:04 AMHuman: I notice the response was cut off. Could you please continue from where you left off with the Runtime Permission Flow section?yes continue from there1:04 AMdart2. Check if granted (Dart):
+   if (await Permission.camera.isGranted) {
+     // Use camera
+   }
+        ↓
+3. Request permission if not granted:
+   if (await Permission.camera.request().isGranted) {
+     // Permission granted, use camera
+   } else {
+     // Permission denied
+   }
+        ↓
+4. User sees dialog:
+   ┌──────────────────────────────────────┐
+   │  Allow GetPos to take pictures       │
+   │  and record video?                   │
+   │                                      │
+   │  [Deny]          [Allow]             │
+   └──────────────────────────────────────┘
+        ↓
+5. Handle result in your app
+Permission Examples with Flutter Code
+Example 1: Camera Permission
+xml<!-- AndroidManifest.xml -->
+<uses-permission android:name="android.permission.CAMERA"/>
+dart// Flutter code
+import 'package:permission_handler/permission_handler.dart';
+
+Future<void> takePicture() async {
+  // Check current status
+  var status = await Permission.camera.status;
+  
+  if (status.isDenied) {
+    // Request permission
+    status = await Permission.camera.request();
+  }
+  
+  if (status.isGranted) {
+    // Permission granted, use camera
+    print('Camera permission granted');
+    // Open camera...
+  } else if (status.isPermanentlyDenied) {
+    // User denied permission permanently
+    // Open app settings
+    openAppSettings();
+  }
+}
+Example 2: Location Permission (with rationale)
+xml<!-- AndroidManifest.xml -->
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+dart// Flutter code
+Future<void> getCurrentLocation() async {
+  var status = await Permission.location.status;
+  
+  if (status.isDenied) {
+    // Show rationale dialog
+    bool shouldRequest = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Location Permission'),
+        content: Text('We need your location to show nearby stores.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+    
+    if (shouldRequest) {
+      status = await Permission.location.request();
+    }
+  }
+  
+  if (status.isGranted) {
+    // Get location
+    Position position = await Geolocator.getCurrentPosition();
+    print('Lat: ${position.latitude}, Lng: ${position.longitude}');
+  }
+}
+Example 3: Multiple Permissions
+dartFuture<void> requestMultiplePermissions() async {
+  Map<Permission, PermissionStatus> statuses = await [
+    Permission.camera,
+    Permission.microphone,
+    Permission.storage,
+  ].request();
+  
+  // Check each permission
+  if (statuses[Permission.camera]!.isGranted &&
+      statuses[Permission.microphone]!.isGranted &&
+      statuses[Permission.storage]!.isGranted) {
+    // All permissions granted
+    print('All permissions granted');
+  } else {
+    // Some permissions denied
+    print('Some permissions denied');
+  }
+}
+Android Version-Specific Permissions
+xml<!-- Storage: Different for different Android versions -->
+
+<!-- Android 9 and below -->
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    android:maxSdkVersion="28"/>
+
+<!-- Android 13+ -->
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+<uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+Kotlin code to handle version differences:
+kotlin// MainActivity.kt
+private fun requestStoragePermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        // Android 13+
+        requestPermissions(
+            arrayOf(
+                Manifest.permission.READ_MEDIA_IMAGES,
+                Manifest.permission.READ_MEDIA_VIDEO
+            ),
+            REQUEST_CODE
+        )
+    } else {
+        // Android 12 and below
+        requestPermissions(
+            arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ),
+            REQUEST_CODE
+        )
+    }
+}
+🔍 Deep Dive: Application Attributes
+xml<application
+    android:label="GetPos"
+    android:icon="@mipmap/ic_launcher"
+    android:usesCleartextTraffic="true"
+    android:hardwareAccelerated="true">
+Complete Attribute Reference
+AttributeValuesPurposeExampleandroid:labelStringApp name"My App"android:iconDrawableApp icon@mipmap/ic_launcherandroid:roundIconDrawableRound icon (adaptive)@mipmap/ic_launcher_roundandroid:usesCleartextTraffictrue/falseAllow HTTPtrue (dev), false (prod)android:hardwareAcceleratedtrue/falseGPU renderingtrue (faster)android:largeHeaptrue/falseMore memorytrue (if needed)android:allowBackuptrue/falseAuto backuptrueandroid:supportsRtltrue/falseRight-to-lefttrue (Arabic, Hebrew)android:themeStyleApp theme@style/AppTheme
+Detailed Explanations
+1. android:usesCleartextTraffic
+xml<!-- Development (allow HTTP) -->
+<application android:usesCleartextTraffic="true">
+
+<!-- Production (HTTPS only) -->
+<application android:usesCleartextTraffic="false">
+Why it matters:
+
+Android 9+ blocks HTTP by default (security)
+Set to true for local development (http://localhost:3000)
+Set to false for production (forces HTTPS)
+
+Network Security Config (better approach):
+xml<!-- AndroidManifest.xml -->
+<application
+    android:networkSecurityConfig="@xml/network_security_config">
+xml<!-- res/xml/network_security_config.xml -->
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext for specific domains only -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain> <!-- Android emulator -->
+    </domain-config>
+    
+    <!-- Production: HTTPS only -->
+    <base-config cleartextTrafficPermitted="false"/>
+</network-security-config>
+2. android:hardwareAccelerated
+xml<application android:hardwareAccelerated="true">
+```
+
+**What it does:**
+- Uses GPU for rendering (faster, smoother)
+- Enabled by default in modern apps
+- Disable only if you have issues with specific views
+
+**Performance comparison:**
+```
+Software Rendering (CPU):
+├─ FPS: 30-40
+├─ Battery: High drain
+└─ Smoothness: Janky
+
+Hardware Rendering (GPU):
+├─ FPS: 60
+├─ Battery: Low drain
+└─ Smoothness: Buttery smooth
+3. android:largeHeap
+xml<application android:largeHeap="true">
+What it does:
+
+Requests more memory from Android
+Normal heap: ~256 MB
+Large heap: ~512 MB (device-dependent)
+
+When to use:
+
+Image-heavy apps (photo editing)
+Video processing
+Large datasets in memory
+
+⚠️ Warning: Don't use as a bandaid for memory leaks!
+kotlin// Check heap size
+val runtime = Runtime.getRuntime()
+val maxMemory = runtime.maxMemory() / 1024 / 1024
+Log.d("Memory", "Max heap: $maxMemory MB")
+🔍 Deep Dive: Activity Attributes
+xml<activity
+    android:name=".MainActivity"
+    android:exported="true"
+    android:launchMode="singleTop"
+    android:screenOrientation="portrait">
+```
+
+#### Complete Attribute Reference
+
+| Attribute | Values | Purpose |
+|-----------|--------|---------|
+| `android:name` | Class name | Activity to launch |
+| `android:exported` | true/false | Can other apps open this? |
+| `android:launchMode` | standard/singleTop/singleTask/singleInstance | How to create instances |
+| `android:screenOrientation` | portrait/landscape/sensor | Lock orientation |
+| `android:theme` | Style | Activity theme |
+| `android:configChanges` | List | Handle config changes |
+| `android:windowSoftInputMode` | adjustResize/adjustPan | Keyboard behavior |
+
+#### Launch Modes Explained
+
+**Visual Comparison:**
+```
+standard (default):
+┌─────────────────────┐
+│ MainActivity        │ ← New instance
+├─────────────────────┤
+│ MainActivity        │ ← New instance
+├─────────────────────┤
+│ MainActivity        │ ← New instance
+└─────────────────────┘
+
+singleTop:
+┌─────────────────────┐
+│ MainActivity        │ ← Reuses if on top
+└─────────────────────┘
+
+singleTask:
+┌─────────────────────┐
+│ MainActivity        │ ← Only one instance
+└─────────────────────┘
+Real-world examples:
+xml<!-- E-commerce app: Multiple product screens -->
+<activity
+    android:name=".ProductActivity"
+    android:launchMode="standard"/>
+
+<!-- Chat app: Don't duplicate chat screen -->
+<activity
+    android:name=".ChatActivity"
+    android:launchMode="singleTop"/>
+
+<!-- Main screen: Only one instance -->
+<activity
+    android:name=".MainActivity"
+    android:launchMode="singleTask"/>
+Screen Orientation
+xml<!-- Lock to portrait -->
+<activity android:screenOrientation="portrait"/>
+
+<!-- Lock to landscape -->
+<activity android:screenOrientation="landscape"/>
+
+<!-- Follow device sensor -->
+<activity android:screenOrientation="sensor"/>
+
+<!-- User preference -->
+<activity android:screenOrientation="user"/>
+
+<!-- No preference (system decides) -->
+<activity android:screenOrientation="unspecified"/>
+Flutter override:
+dart// Lock orientation in Flutter
+SystemChrome.setPreferredOrientations([
+  DeviceOrientation.portraitUp,
+  DeviceOrientation.portraitDown,
+]);
+Config Changes
+xml<activity
+    android:configChanges="orientation|keyboardHidden|screenSize">
+```
+
+**What happens normally:**
+```
+User rotates device
+      ↓
+Activity DESTROYED
+      ↓
+Activity RECREATED
+      ↓
+State lost (unless saved)
+```
+
+**With `configChanges`:**
+```
+User rotates device
+      ↓
+onConfigurationChanged() called
+      ↓
+Activity STAYS ALIVE
+      ↓
+State preserved
+Common combinations:
+xml<!-- Handle rotation + keyboard + screen size -->
+android:configChanges="orientation|keyboardHidden|keyboard|screenSize"
+
+<!-- Handle everything (not recommended) -->
+android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+Window Soft Input Mode
+xml<activity android:windowSoftInputMode="adjustResize"/>
+```
+
+**Visual comparison:**
+
+**adjustResize:**
+```
+Before keyboard:          After keyboard:
+┌──────────────────┐     ┌──────────────────┐
+│                  │     │ [TextField]      │ ← Visible
+│                  │     ├──────────────────┤
+│ [TextField]      │     │ ▓▓▓ KEYBOARD ▓▓▓ │
+│ [Button]         │     │ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ │
+└──────────────────┘     └──────────────────┘
+```
+
+**adjustPan:**
+```
+Before keyboard:          After keyboard:
+┌──────────────────┐     ┌──────────────────┐
+│ [Header]         │     │ (scrolled up)    │
+│                  │     │ [TextField]      │ ← Visible
+│ [TextField]      │     ├──────────────────┤
+│ [Button]         │     │ ▓▓▓ KEYBOARD ▓▓▓ │
+└──────────────────┘     └──────────────────┘
+```
+
+**adjustNothing:**
+```
+Before keyboard:          After keyboard:
+┌──────────────────┐     ┌──────────────────┐
+│                  │     │                  │
+│ [TextField]      │     │ [TextField]      │ ← Hidden!
+│ [Button]         │     ├──────────────────┤
+└──────────────────┘     │ ▓▓▓ KEYBOARD ▓▓▓ │
+                         └──────────────────┘
+Recommendation for Flutter:
+xml<activity android:windowSoftInputMode="adjustResize"/>
+🔍 Deep Dive: Intent Filters
+1. Launcher Intent Filter (Make app appear in app drawer)
+xml<intent-filter>
+    <action android:name="android.intent.action.MAIN"/>
+    <category android:name="android.intent.category.LAUNCHER"/>
+</intent-filter>
+What this means:
+
+MAIN: This is the main entry point
+LAUNCHER: Show icon in app launcher
+
+Without this: Your app won't appear in the app drawer!
+2. Deep Linking (Open app from custom URL)
+xml<intent-filter>
+    <action android:name="android.intent.action.VIEW"/>
+    <category android:name="android.intent.category.DEFAULT"/>
+    <category android:name="android.intent.category.BROWSABLE"/>
+    <data android:scheme="myapp" android:host="product"/>
+</intent-filter>
+```
+
+**Opens app from:**
+```
+myapp://product/123
+myapp://product/abc?ref=email
+Flutter code to handle:
+dart// pubspec.yaml
+dependencies:
+  uni_links: ^0.5.1
+
+// Flutter code
+import 'package:uni_links/uni_links.dart';
+
+void initDeepLinks() async {
+  // Handle app opened from link
+  final initialLink = await getInitialLink();
+  if (initialLink != null) {
+    print('App opened with: $initialLink');
+    // myapp://product/123
+    // Parse and navigate
+  }
+  
+  // Listen for future links (app already running)
+  linkStream.listen((String? link) {
+    print('New link received: $link');
+  });
+}
+3. Web Links (App Links / Universal Links)
+xml<intent-filter android:autoVerify="true">
+    <action android:name="android.intent.action.VIEW"/>
+    <category android:name="android.intent.category.DEFAULT"/>
+    <category android:name="android.intent.category.BROWSABLE"/>
+    <data 
+        android:scheme="https"
+        android:host="myapp.com"
+        android:pathPrefix="/product"/>
+</intent-filter>
+```
+
+**Opens app from:**
+```
+https://myapp.com/product/123
+```
+
+**Verification required:**
+Host `assetlinks.json` at:
+```
+https://myapp.com/.well-known/assetlinks.json
+json[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.getpos.getpos",
+    "sha256_cert_fingerprints": [
+      "14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5"
+    ]
+  }
+}]
+Get fingerprint:
+bashkeytool -list -v -keystore upload-keystore.jks
+4. Share to App (Receive shared content)
+xml<intent-filter>
+    <action android:name="android.intent.action.SEND"/>
+    <category android:name="android.intent.category.DEFAULT"/>
+    <data android:mimeType="text/plain"/>
+</intent-filter>
+Appears in share menu when sharing:
+
+Text
+URLs
+
+Handle in MainActivity:
+kotlinoverride fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    
+    when (intent?.action) {
+        Intent.ACTION_SEND -> {
+            if ("text/plain" == intent.type) {
+                val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                // Handle shared text
+            }
+        }
+    }
+}
+Share images:
+xml<intent-filter>
+    <action android:name="android.intent.action.SEND"/>
+    <category android:name="android.intent.category.DEFAULT"/>
+    <data android:mimeType="image/*"/>
+</intent-filter>
+Share multiple images:
+xml<intent-filter>
+    <action android:name="android.intent.action.SEND_MULTIPLE"/>
+    <category android:name="android.intent.category.DEFAULT"/>
+    <data android:mimeType="image/*"/>
+</intent-filter>
+```
+
+---
+
+<div id="proguard"></div>
+
+## 🔐 ProGuard & Code Protection
+
+## 📄 proguard-rules.pro
+
+**Location:** `android/app/proguard-rules.pro`
+
+**Purpose:** Code shrinking, obfuscation, and optimization rules.
+
+### What is ProGuard/R8?
+
+**ProGuard** = Old tool (still used)  
+**R8** = Modern replacement (faster, better)
+
+Both do 4 things:
+```
+1. SHRINKING (Remove unused code)
+   ├─ Before: 100 classes
+   └─ After: 30 classes (70% smaller!)
+
+2. OBFUSCATION (Rename to make reverse engineering harder)
+   ├─ Before: class UserManager { void deleteUser() {} }
+   └─ After: class a { void b() {} }
+
+3. OPTIMIZATION (Make code faster)
+   ├─ Before: if (DEBUG && true) { log(); }
+   └─ After: if (DEBUG) { log(); }
+
+4. PREVERIFICATION (Java 6 bytecode verification)
+Complete proguard-rules.pro
+proguard# ══════════════════════════════════════════════════════════════
+# FLUTTER CORE RULES (NEVER REMOVE!)
+# ══════════════════════════════════════════════════════════════
+
+# Keep Flutter wrapper
+-keep class io.flutter.app.** { *; }
+-keep class io.flutter.plugin.** { *; }
+-keep class io.flutter.util.** { *; }
+-keep class io.flutter.view.** { *; }
+-keep class io.flutter.** { *; }
+-keep class io.flutter.plugins.** { *; }
+
+# Keep BuildConfig
+-keep class **.BuildConfig { *; }
+
+# Keep R (resources)
+-keep class **.R$* { *; }
+
+# ══════════════════════════════════════════════════════════════
+# GSON / JSON SERIALIZATION
+# ══════════════════════════════════════════════════════════════
+
+# Keep field names for JSON
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+
+# Keep generic signatures
+-keepattributes Signature
+
+# Keep annotations
+-keepattributes *Annotation*
+
+# Keep model classes
+-keep class com.getpos.getpos.models.** { *; }
+
+# Example: Specific model
+-keep class com.getpos.getpos.models.User {
+    private java.lang.String name;
+    private int age;
+    public <methods>;
+}
+
+# ══════════════════════════════════════════════════════════════
+# RETROFIT / OKHTTP (NETWORKING)
+# ══════════════════════════════════════════════════════════════
+
+# Retrofit
+-keepattributes Signature
+-keepattributes Exceptions
+-keep class retrofit2.** { *; }
+
+# Keep API interfaces
+-keep interface com.getpos.getpos.api.** { *; }
+
+# Keep service method annotations
+-keepclassmembernames,allowobfuscation interface * {
+    @retrofit2.http.* <methods>;
+}
+
+# OkHttp
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+
+# OkHttp platform used only on JVM and when Conscrypt dependency is available
+-dontwarn org.conscrypt.**
+
+# ══════════════════════════════════════════════════════════════
+# FIREBASE
+# ══════════════════════════════════════════════════════════════
+
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
+
+# Firebase Crashlytics
+-keepattributes SourceFile,LineNumberTable
+-keep public class * extends java.lang.Exception
+
+# ══════════════════════════════════════════════════════════════
+# KOTLIN
+# ══════════════════════════════════════════════════════════════
+
+# Keep Kotlin metadata
+-keep class kotlin.Metadata { *; }
+
+# Keep Kotlin classes
+-keep class kotlin.** { *; }
+-keep class kotlin.jvm.** { *; }
+
+# Kotlin coroutines
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+
+# ══════════════════════════════════════════════════════════════
+# ANDROIDX / ANDROID COMPONENTS
+# ══════════════════════════════════════════════════════════════
+
+# AndroidX
+-keep class androidx.** { *; }
+-keep interface androidx.** { *; }
+
+# Lifecycle
+-keep class * extends androidx.lifecycle.ViewModel
+-keep class * extends androidx.lifecycle.AndroidViewModel
+
+# ══════════════════════════════════════════════════════════════
+# NATIVE METHODS
+# ══════════════════════════════════════════════════════════════
+
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# ══════════════════════════════════════════════════════════════
+# ENUMS
+# ══════════════════════════════════════════════════════════════
+
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# ══════════════════════════════════════════════════════════════
+# PARCELABLE
+# ══════════════════════════════════════════════════════════════
+
+-keep class * implements android.os.Parcelable {
+    public static final android.os.Parcelable$Creator *;
+}
+
+# ══════════════════════════════════════════════════════════════
+# SERIALIZABLE
+# ══════════════════════════════════════════════════════════════
+
+-keepnames class * implements java.io.Serializable
+
+-keepclassmembers class * implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    !static !transient <fields>;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}
+
+# ══════════════════════════════════════════════════════════════
+# CUSTOM ANNOTATIONS
+# ══════════════════════════════════════════════════════════════
+
+# Keep classes with @Keep annotation
+-keep @androidx.annotation.Keep class * { *; }
+-keepclassmembers class * {
+    @androidx.annotation.Keep *;
+}
+
+# ══════════════════════════════════════════════════════════════
+# REMOVE LOGGING (RELEASE BUILD)
+# ══════════════════════════════════════════════════════════════
+
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+    # Keep warnings and errors
+    # public static *** w(...);
+    # public static *** e(...);
+}
+
+# ══════════════════════════════════════════════════════════════
+# OPTIMIZATION SETTINGS
+# ══════════════════════════════════════════════════════════════
+
+# Number of optimization passes
+-optimizationpasses 5
+
+# Don't use mixed-case class names
+-dontusemixedcaseclassnames
+
+# Don't skip non-public library classes
+-dontskipnonpubliclibraryclasses
+
+# Preverify
+-dontpreverify
+
+# Optimize for code size
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+
+# ══════════════════════════════════════════════════════════════
+# DEBUGGING (OPTIONAL - REMOVE IN FINAL PRODUCTION)
+# ══════════════════════════════════════════════════════════════
+
+# Print mapping file (shows what was renamed)
+-printmapping build/outputs/mapping/release/mapping.txt
+
+# Print seeds (classes that were kept)
+-printseeds build/outputs/mapping/release/seeds.txt
+
+# Print usage (classes that were removed)
+-printusage build/outputs/mapping/release/usage.txt
+
+# ══════════════════════════════════════════════════════════════
+# LIBRARY-SPECIFIC RULES
+# ══════════════════════════════════════════════════════════════
+
+# Glide (image loading)
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep class * extends com.bumptech.glide.module.AppGlideModule {
+    <init>(...);
+}
+
+# Room Database
+-keep class * extends androidx.room.RoomDatabase
+-dontwarn androidx.room.paging.**
+
+# WorkManager
+-keep class * extends androidx.work.Worker
+-keep class * extends androidx.work.InputMerger
+
+# Dagger/Hilt
+-keep class dagger.** { *; }
+-keep class javax.inject.** { *; }
+
+# ══════════════════════════════════════════════════════════════
+# CUSTOM PROJECT RULES
+# ══════════════════════════════════════════════════════════════
+
+# Keep your specific models
+-keep class com.getpos.getpos.data.** { *; }
+-keep class com.getpos.getpos.domain.** { *; }
+
+# Keep classes used in reflection
+-keep class com.getpos.getpos.utils.ReflectionHelper { *; }
+```
+
+### Common ProGuard Errors & Solutions
+
+#### Error 1: ClassNotFoundException in Release Build
+```
+java.lang.ClassNotFoundException: com.getpos.getpos.models.User
+Cause: ProGuard removed or renamed the class.
+Fix:
+proguard-keep class com.getpos.getpos.models.User { *; }
+
+# Or keep all models
+-keep class com.getpos.getpos.models.** { *; }
+```
+
+#### Error 2: JSON Parsing Fails
+```
+Expected BEGIN_OBJECT but was STRING at line 1 column 1
+Cause: Field names were obfuscated.
+Before obfuscation:
+kotlindata class User(
+    @SerializedName("name") val name: String,
+    @SerializedName("age") val age: Int
+)
+
+// JSON: {"name": "John", "age": 30}
+After obfuscation:
+kotlindata class a(
+    @SerializedName("name") val b: String,  // Field renamed!
+    @SerializedName("age") val c: Int
+)
+
+// Still looking for {"name": "John"} but field is now "b"
+Fix:
+proguard-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+
+# Keep model classes
+-keep class com.getpos.getpos.models.** { *; }
+```
+
+#### Error 3: Method Does Not Exist
+```
+java.lang.NoSuchMethodException: getUserData
+Cause: Method was renamed or removed.
+Fix:
+proguard-keepclassmembers class com.getpos.getpos.ApiService {
+    public <methods>;
+}
+```
+
+#### Error 4: Native Method Error
+```
+java.lang.UnsatisfiedLinkError: No implementation found for native method
+Cause: Native method signature was changed.
+Fix:
+proguard-keepclasseswithmembernames class * {
+    native <methods>;
+}
+Testing ProGuard Rules
+1. Build release APK:
+bashcd android
+./gradlew assembleRelease
+```
+
+**2. Check mapping file:**
+```
+android/app/build/outputs/mapping/release/mapping.txt
+```
+```
+com.getpos.getpos.models.User -> a:
+    java.lang.String name -> b
+    int age -> c
+    java.lang.String getName() -> d
+    void setName(java.lang.String) -> e
+3. Decode crash stack trace:
+bash# If app crashes in production
+retrace.bat mapping.txt crash_stacktrace.txt
+
+# Output shows original class/method names
+ProGuard vs R8
+FeatureProGuardR8SpeedSlower2x fasterShrinkingGoodBetterObfuscationGoodSameDefaultOld projectsNew projectsConfigproguard-rules.proSame file
+Enable R8:
+properties# gradle.properties
+android.enableR8=true
+android.enableR8.fullMode=true
+```
+
+---
+
+<div id="signing"></div>
+
+## 🔐 Signing & Security Files
+
+## 📄 key.properties
+
+**Location:** `android/key.properties`
+
+**⚠️ CRITICAL:** This file contains SECRETS! Add to `.gitignore`!
+
+### What is App Signing?
+
+**Simple Analogy:**
+```
+Physical World          Digital World
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature on contract → Digital signature on APK
+Proves it's really you → Proves app is from you
+Why needed:
+
+Identity: Proves you made this app
+Updates: Only you can update your app
+Security: Prevents tampering
+Play Store: Required for publishing
+
+Complete key.properties
+properties# ══════════════════════════════════════════════════════════════Continue1:07 AMKEYSTORE LOCATION
+══════════════════════════════════════════════════════════════
+Absolute path to keystore file
+storeFile=/Users/yourname/Documents/keys/upload-keystore.jks
+OR relative to android/ folder
+storeFile=../upload-keystore.jks
+══════════════════════════════════════════════════════════════
+KEYSTORE CREDENTIALS
+══════════════════════════════════════════════════════════════
+Password for the keystore file itself
+storePassword=MyVerySecretPassword123!
+Alias (name) of the key inside keystore
+keyAlias=upload
+Password for the specific key
+keyPassword=MyKeyPassword456!
+
+### Creating a Keystore (Step-by-Step)
+
+**Method 1: Command Line (keytool)**
+```bash
+# Navigate to a secure location
+cd ~/Documents/keys/
+
+# Generate keystore
+keytool -genkey -v \
+  -keystore upload-keystore.jks \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000 \
+  -alias upload
+
+# Prompts will appear:
+```
+Enter keystore password: [Type a strong password]
+Re-enter new password: [Type again]
+What is your first and last name?
+[Unknown]: John Doe
+What is the name of your organizational unit?
+[Unknown]: Mobile Development
+What is the name of your organization?
+[Unknown]: GetPos Inc
+What is the name of your City or Locality?
+[Unknown]: San Francisco
+What is the name of your State or Province?
+[Unknown]: California
+What is the two-letter country code for this unit?
+[Unknown]: US
+Is CN=John Doe, OU=Mobile Development, O=GetPos Inc,
+L=San Francisco, ST=California, C=US correct?
+[no]: yes
+Generating 2,048 bit RSA key pair and self-signed certificate (SHA256withRSA)
+with a validity of 10,000 days for: CN=John Doe, OU=Mobile Development...
+Enter key password for <upload>
+(RETURN if same as keystore password): [Press Enter or type different password]
+[Storing upload-keystore.jks]
+
+**Method 2: Android Studio**
+
+Build → Generate Signed Bundle / APK
+Create new keystore
+Fill in details
+Save keystore file
+
+
+### Configuring build.gradle to Use Keystore
+```gradle
+// android/app/build.gradle
+
+// ══════════════════════════════════════════════════════════════
+// LOAD KEY PROPERTIES
+// ══════════════════════════════════════════════════════════════
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    // ...
+    
+    // ══════════════════════════════════════════════════════════
+    // SIGNING CONFIGURATIONS
+    // ══════════════════════════════════════════════════════════
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+        
+        // Optional: Debug signing (auto-generated)
+        debug {
+            storeFile file("debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+    }
+    
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            // ...
+        }
+        
+        debug {
+            signingConfig signingConfigs.debug
+        }
+    }
+}
+```
+
+### Building Signed APK/AAB
+
+**APK (Android Package):**
+```bash
+# Build signed APK
+flutter build apk --release
+
+# Output: build/app/outputs/flutter-apk/app-release.apk
+```
+
+**AAB (Android App Bundle) - Recommended for Play Store:**
+```bash
+# Build signed AAB
+flutter build appbundle --release
+
+# Output: build/app/outputs/bundle/release/app-release.aab
+```
+
+**Size comparison:**
+APK:  50 MB → User downloads 50 MB
+AAB:  50 MB → User downloads 30 MB (Play Store optimizes!)
+
+### Verifying APK Signature
+```bash
+# Check if APK is signed
+jarsigner -verify -verbose -certs app-release.apk
+
+# Output:
+sm     11664 Fri Dec 30 12:00:00 IST 2025 META-INF/MANIFEST.MF
+       11816 Fri Dec 30 12:00:00 IST 2025 META-INF/CERT.SF
+        1234 Fri Dec 30 12:00:00 IST 2025 META-INF/CERT.RSA
+
+  X.509, CN=John Doe, OU=Mobile Development, O=GetPos Inc...
+  [certificate is valid from 12/30/25 to 6/27/53]
+
+jar verified.
+```
+
+### Security Best Practices
+
+#### 1. Never Commit Secrets to Git
+```bash
+# .gitignore
+key.properties
+*.jks
+*.keystore
+upload-keystore.jks
+```
+
+#### 2. Backup Keystore Securely
+
+**❌ Bad:**
+- Email to yourself
+- Upload to public GitHub
+- Store in Downloads folder
+
+**✅ Good:**
+- Password manager (1Password, LastPass)
+- Encrypted USB drive
+- Company secure server
+- Multiple encrypted backups
+
+#### 3. Use Environment Variables (CI/CD)
+```bash
+# GitHub Actions / GitLab CI
+echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> key.properties
+echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> key.properties
+echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> key.properties
+echo "storeFile=../upload-keystore.jks" >> key.properties
+```
+
+#### 4. Separate Debug and Release Keys
+Debug Key (auto-generated):
+├─ Password: "android"
+├─ Alias: "androiddebugkey"
+└─ Shared by all developers
+Release Key (your custom key):
+├─ Password: Strong password
+├─ Alias: "upload"
+└─ Keep SECRET!
+
+### What If You Lose Your Keystore?
+
+**Scenario: Lost keystore file**
+❌ Cannot update existing app on Play Store
+❌ Must create new app listing
+❌ Lose all reviews, ratings, downloads
+
+**Google Play App Signing (Recommended):**
+
+You create "upload key" (can be reset)
+Google creates "app signing key" (permanent)
+If you lose upload key → Request new one from Google
+App signing key stays safe with Google
+
+
+**Enable Play App Signing:**
+
+Play Console → Setup → App signing
+Let Google manage your app signing key
+Upload your APK/AAB signed with upload key
+
+
+---
+
+<div id="cache"></div>
+
+## 🗂️ Cache & Generated Files
+
+## 📁 .gradle/ Folder
+
+**Location:** `android/.gradle/`
+
+**Purpose:** Gradle's internal cache and build metadata.
+
+### What's Inside
+.gradle/
+├── 8.4/                        # Gradle version
+│   ├── checksums/              # Verify downloaded files
+│   │   └── checksums.bin
+│   ├── dependencies-accessors/ # Fast dependency lookup
+│   ├── executionHistory/       # What ran in previous builds
+│   │   ├── executionHistory.bin
+│   │   └── executionHistory.lock
+│   ├── fileChanges/            # Track changed files
+│   │   └── last-build.bin
+│   ├── fileHashes/             # Quick file comparison
+│   │   ├── fileHashes.bin
+│   │   └── fileHashes.lock
+│   └── vcsMetadata/            # Git/VCS information
+├── buildOutputCleanup/         # Cleanup tracking
+│   ├── buildOutputCleanup.lock
+│   ├── cache.properties
+│   └── outputFiles.bin
+└── vcs-1/                      # Version control cache
+├── gc.properties
+└── file-system.probe
+
+### When to Delete
+
+**Symptoms:**
+- Build fails with weird errors
+- "Daemon disappeared unexpectedly"
+- "Could not resolve dependencies"
+- Build takes forever
+
+**Solution:**
+```bash
+# Stop Gradle daemon
+cd android
+./gradlew --stop
+
+# Delete cache
+rm -rf .gradle/
+
+# Clean and rebuild
+./gradlew clean
+cd ..
+flutter clean
+flutter pub get
+flutter build apk
+```
+
+**What gets regenerated:**
+.gradle/ folder (automatically)
+├─ Downloads dependencies again
+├─ Recalculates hashes
+└─ Rebuilds execution history
+
+## 📁 build/ Folder
+
+**Location:** `android/build/` and `android/app/build/`
+
+**Purpose:** Compiled outputs and intermediate files.
+
+### Structure
+build/
+├── app/
+│   ├── intermediates/          # Intermediate build files
+│   │   ├── javac/              # Compiled Java/Kotlin
+│   │   ├── merged_res/         # Merged resources
+│   │   ├── merged_manifests/   # Merged manifests
+│   │   └── dex/                # DEX files (Android bytecode)
+│   ├── generated/              # Auto-generated code
+│   │   ├── source/
+│   │   │   ├── buildConfig/    # BuildConfig.java
+│   │   │   └── r/              # R.java (resource IDs)
+│   │   └── res/
+│   ├── outputs/                # Final outputs
+│   │   ├── apk/
+│   │   │   ├── debug/
+│   │   │   │   └── app-debug.apk       ← Your debug APK
+│   │   │   └── release/
+│   │   │       └── app-release.apk     ← Your release APK
+│   │   ├── bundle/
+│   │   │   └── release/
+│   │   │       └── app-release.aab     ← App Bundle
+│   │   ├── logs/
+│   │   │   └── manifest-merger-release-report.txt
+│   │   └── mapping/
+│   │       └── release/
+│   │           ├── mapping.txt         ← ProGuard mapping
+│   │           ├── seeds.txt           ← Kept classes
+│   │           └── usage.txt           ← Removed classes
+│   └── tmp/                    # Temporary files
+└── kotlin/                     # Kotlin compiler cache
+
+### Important Files
+
+#### BuildConfig.java (Generated)
+```java
+// build/app/generated/source/buildConfig/release/com/getpos/getpos/BuildConfig.java
+
+public final class BuildConfig {
+  public static final boolean DEBUG = false;
+  public static final String APPLICATION_ID = "com.getpos.getpos";
+  public static final String BUILD_TYPE = "release";
+  public static final int VERSION_CODE = 1;
+  public static final String VERSION_NAME = "1.0";
+  
+  // Custom fields from build.gradle
+  public static final String API_URL = "https://api.production.com";
+  public static final boolean DEBUG_MODE = false;
+}
+```
+
+**Usage in Kotlin:**
+```kotlin
+// MainActivity.kt
+if (BuildConfig.DEBUG) {
+    Log.d("API", "Using: ${BuildConfig.API_URL}")
+}
+```
+
+#### R.java (Generated)
+```java
+// build/app/generated/source/r/release/com/getpos/getpos/R.java
+
+public final class R {
+    public static final class drawable {
+        public static final int ic_launcher = 0x7f020000;
+        public static final int splash_image = 0x7f020001;
+    }
+    
+    public static final class string {
+        public static final int app_name = 0x7f030000;
+    }
+    
+    public static final class mipmap {
+        public static final int ic_launcher = 0x7f040000;
+    }
+}
+```
+
+**Usage:**
+```kotlin
+// Access resources
+val appName = getString(R.string.app_name)
+val icon = getDrawable(R.drawable.ic_launcher)
+```
+
+### When to Delete
+```bash
+# Clean build folder
+cd android
+./gradlew clean
+
+# OR delete manually
+rm -rf build/
+
+# Flutter also cleans it
+flutter clean
+```
+
+**What gets regenerated:**
+- All intermediate files
+- Compiled classes
+- DEX files
+- Final APK/AAB
+
+**When to clean:**
+- Switching branches
+- After updating dependencies
+- Build behaving strangely
+- Before release build
+
+### Build Folder Size
+Typical sizes:
+├─ Debug build:   500 MB - 2 GB
+└─ Release build: 200 MB - 1 GB
+Large project:    5 GB+
+
+**Disk space issues:**
+```bash
+# Check size
+du -sh build/
+# Output: 1.5G
+
+# Clean
+flutter clean
+./gradlew clean
+
+# Free space!
+```
+
+## 📄 local.properties
+
+**Location:** `android/local.properties`
+
+**Purpose:** Local machine-specific paths (NOT committed to Git).
+
+### Contents
+```properties
+## This file must *NOT* be checked into Version Control Systems,
+## as it contains information specific to your local configuration.
+
+# Location of the Android SDK
+sdk.dir=/Users/yourname/Library/Android/sdk
+
+# Location of the Flutter SDK
+flutter.sdk=/Users/yourname/development/flutter
+
+# Location of the Android NDK (if needed for C++ code)
+ndk.dir=/Users/yourname/Library/Android/sdk/ndk/21.4.7075529
+```
+
+### Why It's Gitignored
+
+**Your machine:**
+```properties
+sdk.dir=/Users/alice/Library/Android/sdk
+```
+
+**Teammate's machine:**
+```properties
+sdk.dir=C:\Users\bob\AppData\Local\Android\Sdk
+```
+
+**CI/CD server:**
+```properties
+sdk.dir=/opt/android-sdk
+```
+
+**Different paths = Must be generated locally!**
+
+### Auto-Generation
+```bash
+# Delete it
+rm android/local.properties
+
+# Run any Flutter command
+flutter build apk
+
+# File is recreated automatically!
+```
+
+**Flutter detects SDK locations from:**
+1. `$ANDROID_HOME` environment variable
+2. Default installation paths
+3. Android Studio settings
+
+---
+
+<div id="troubleshooting"></div>
+
+## 🐛 Comprehensive Troubleshooting Guide
+
+### Problem 1: Build Fails with "Duplicate Class"
+Duplicate class com.google.common.util.concurrent.ListenableFuture found in modules:
+
+guava-26.0-android.jar
+listenablefuture-1.0.jar
+
+
+**Cause:** Multiple libraries include the same class.
+
+**Solution:**
+```gradle
+// android/app/build.gradle
+android {
+    configurations.all {
+        resolutionStrategy {
+            // Force specific version
+            force 'com.google.guava:guava:28.0-android'
+        }
+    }
+}
+```
+
+---
+
+### Problem 2: "Manifest Merger Failed"
+Manifest merger failed : Attribute application@appComponentFactory value=(androidx.core.app.CoreComponentFactory)
+
+**Cause:** Mixing old support libraries with AndroidX.
+
+**Solution:**
+```properties
+# android/gradle.properties
+android.useAndroidX=true
+android.enableJetifier=true
+```
+```bash
+# Clean and rebuild
+flutter clean
+cd android
+./gradlew clean
+cd ..
+flutter pub get
+flutter build apk
+```
+
+---
+
+### Problem 3: "Min SDK Version" Error
+The minSdk Human: Continueif any thing left, continue1:08 AMThe minSdkVersion (21) specified in the build.gradle is lower than the minSdkVersion (23) specified in the library's manifest.
+Cause: Plugin requires higher Android version than your app.
+Solution:
+gradle// android/app/build.gradle
+android {
+    defaultConfig {
+        minSdk 23  // Increase to match requirement
+        targetSdk 34
+    }
+}
+Check plugin requirements:
+yaml# pubspec.yaml - Check plugin's README
+dependencies:
+  some_plugin: ^1.0.0  # Requires minSdk 23
+```
+
+---
+
+### Problem 4: "OutOfMemoryError"
+```
+Expiring Daemon because JVM heap space is exhausted
+OutOfMemoryError: Java heap space
+Solution:
+properties# android/gradle.properties
+org.gradle.jvmargs=-Xmx4096m  # Increase from 2GB to 4GB
+
+# If still not enough
+org.gradle.jvmargs=-Xmx8192m  # 8GB (if you have 16GB+ RAM)
+```
+
+---
+
+### Problem 5: "Gradle Daemon Disappeared"
+```
+Gradle build daemon disappeared unexpectedly (it may have been killed or may have crashed)
+Solution:
+bash# 1. Stop daemon
+cd android
+./gradlew --stop
+
+# 2. Delete cache
+rm -rf .gradle/
+
+# 3. Rebuild
+./gradlew clean
+cd ..
+flutter clean
+flutter pub get
+flutter build apk
+```
+
+---
+
+### Problem 6: "Could Not Resolve Dependency"
+```
+Could not resolve com.google.firebase:firebase-core:21.0.0
+Solution:
+gradle// android/build.gradle (project-level)
+allprojects {
+    repositories {
+        google()        // Make sure this exists!
+        mavenCentral()
+    }
+}
+bash# Also try clearing cache
+cd android
+./gradlew --refresh-dependencies
+```
+
+---
+
+### Problem 7: Release Build Crashes, Debug Works
+```
+java.lang.ClassNotFoundException: com.getpos.getpos.models.User
+Cause: ProGuard removed or renamed classes.
+Solution:
+proguard# android/app/proguard-rules.pro
+
+# Keep all model classes
+-keep class com.getpos.getpos.models.** { *; }
+
+# Keep classes with @Keep annotation
+-keep @androidx.annotation.Keep class * { *; }
+```
+
+---
+
+### Problem 8: "android:exported" Error (Android 12+)
+```
+Targeting S+ (version 31 and above) requires that one of FLAG_IMMUTABLE or FLAG_MUTABLE be specified
+Solution:
+xml<!-- android/app/src/main/AndroidManifest.xml -->
+<activity
+    android:name=".MainActivity"
+    android:exported="true">  <!-- Add this! -->
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+    </intent-filter>
+</activity>
+```
+
+---
+
+### Problem 9: "Multidex" Error
+```
+Cannot fit requested classes in a single dex file (# methods: 72345 > 65536)
+Cause: Too many methods (over 64K limit).
+Solution:
+gradle// android/app/build.gradle
+android {
+    defaultConfig {
+        multiDexEnabled true  // Enable multidex
+    }
+}
+
+dependencies {
+    implementation 'androidx.multidex:multidex:2.0.1'
+}
+kotlin// MainActivity.kt (if needed)
+class MyApplication : MultiDexApplication() {
+    // ...
+}
+xml<!-- AndroidManifest.xml -->
+<application
+    android:name=".MyApplication">  <!-- Use custom application -->
+```
+
+---
+
+### Problem 10: Plugin Not Working
+```
+MissingPluginException(No implementation found for method XXX on channel YYY)
+Solution:
+bash# 1. Clean everything
+flutter clean
+cd android
+./gradlew clean
+cd ..
+
+# 2. Get dependencies
+flutter pub get
+
+# 3. Check plugin registration
+cat android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
+# 4. Rebuild
+flutter build apk
+```
+
+---
+
+### Problem 11: Signing Error
+```
+jarsigner: unable to sign jar: java.util.zip.ZipException: invalid entry compressed size
+Solution:
+bash# 1. Verify keystore is valid
+keytool -list -v -keystore upload-keystore.jks
+
+# 2. Recreate if corrupted
+keytool -genkey -v -keystore new-keystore.jks ...
+
+# 3. Update key.properties
+```
+
+---
+
+### Problem 12: Permission Denied (gradlew)
+```
+bash: ./gradlew: Permission denied
+Solution:
+bash# Make gradlew executable
+chmod +x android/gradlew
+
+# Now run
+cd android
+./gradlew assembleDebug
+```
+
+---
+
+### Problem 13: "AAPT2 Error"
+```
+AAPT2 error: check logs for details
+Cause: Resource compilation error (usually PNG/XML issues).
+Solution:
+bash# 1. Check logs
+cd android
+./gradlew assembleDebug --stacktrace
+
+# 2. Clean resources
+rm -rf build/
+./gradlew clean
+
+# 3. Check for corrupted images in res/
+# Look for:
+# - Invalid PNG files
+# - Malformed XML files
+# - Special characters in filenames
+```
+
+---
+
+### Problem 14: Kotlin Version Mismatch
+```
+Module was compiled with an incompatible version of Kotlin.
+Solution:
+gradle// android/build.gradle (project-level)
+buildscript {
+    ext.kotlin_version = '1.9.22'  // Update to latest
+}
+
+dependencies {
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+}
+
+🔍 Debugging Commands Cheat Sheet
+bash# ══════════════════════════════════════════════════════════════
+# GRADLE COMMANDS
+# ══════════════════════════════════════════════════════════════
+
+# Check Gradle version
+./gradlew --version
+
+# List all tasks
+./gradlew tasks
+
+# Build debug APK
+./gradlew assembleDebug
+
+# Build release APK
+./gradlew assembleRelease
+
+# Install debug APK to device
+./gradlew installDebug
+
+# Clean build files
+./gradlew clean
+
+# Rebuild everything
+./gradlew clean assembleDebug
+
+# Show dependencies
+./gradlew :app:dependencies
+
+# Show dependency tree
+./gradlew :app:dependencies --configuration releaseRuntimeClasspath
+
+# Check for dependency updates
+./gradlew dependencyUpdates
+
+# Show build info
+./gradlew --info assembleDebug
+
+# Show detailed errors
+./gradlew assembleDebug --stacktrace
+
+# Stop Gradle daemon
+./gradlew --stop
+
+# Refresh dependencies
+./gradlew --refresh-dependencies
+
+# ══════════════════════════════════════════════════════════════
+# FLUTTER COMMANDS
+# ══════════════════════════════════════════════════════════════
+
+# Clean Flutter build
+flutter clean
+
+# Get dependencies
+flutter pub get
+
+# Upgrade dependencies
+flutter pub upgrade
+
+# Build APK
+flutter build apk
+
+# Build App Bundle
+flutter build appbundle
+
+# Build split APKs (smaller downloads)
+flutter build apk --split-per-abi
+
+# Build release APK with verbose output
+flutter build apk --release -v
+
+# Run on device
+flutter run
+
+# Run in release mode
+flutter run --release
+
+# Check for issues
+flutter doctor
+
+# Detailed check
+flutter doctor -v
+
+# ══════════════════════════════════════════════════════════════
+# ANDROID DEBUG BRIDGE (ADB)
+# ══════════════════════════════════════════════════════════════
+
+# List connected devices
+adb devices
+
+# Install APK
+adb install app-release.apk
+
+# Uninstall app
+adb uninstall com.getpos.getpos
+
+# View logs
+adb logcat
+
+# Filter logs by app
+adb logcat | grep "com.getpos"
+
+# Clear logs
+adb logcat -c
+
+# Take screenshot
+adb exec-out screencap -p > screenshot.png
+
+# Record screen
+adb shell screenrecord /sdcard/demo.mp4
+
+# ══════════════════════════════════════════════════════════════
+# KEYTOOL COMMANDS
+# ══════════════════════════════════════════════════════════════
+
+# Generate keystore
+keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+
+# List keystore contents
+keytool -list -v -keystore upload-keystore.jks
+
+# Get SHA-1 fingerprint (for Firebase)
+keytool -list -v -keystore upload-keystore.jks -alias upload
+
+# Change keystore password
+keytool -storepasswd -keystore upload-keystore.jks
+
+# Change key password
+keytool -keypasswd -keystore upload-keystore.jks -alias upload
+
+# ══════════════════════════════════════════════════════════════
+# JARSIGNER COMMANDS
+# ══════════════════════════════════════════════════════════════
+
+# Verify APK signature
+jarsigner -verify -verbose -certs app-release.apk
+
+# Sign APK manually
+jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore upload-keystore.jks app-release.apk upload
+
+# ══════════════════════════════════════════════════════════════
+# APKANALYZER COMMANDS
+# ══════════════════════════════════════════════════════════════
+
+# Show APK contents
+apkanalyzer apk summary app-release.apk
+
+# Show file sizes
+apkanalyzer apk file-size app-release.apk
+
+# Show method count
+apkanalyzer dex packages app-release.apk
+
+# Compare two APKs
+apkanalyzer apk compare app-v1.apk app-v2.apk
+
+📚 Quick Reference Tables
+File Edit Frequency
+FileEdit Often?Can Delete?Regenerates?build.gradle (project)Sometimes❌ No❌ Nobuild.gradle (app)Often❌ No❌ Nosettings.gradleRarely❌ No❌ Nogradle.propertiesRarely❌ No❌ Nolocal.propertiesNever✅ Yes✅ Yeskey.propertiesOnce❌ No (BACKUP!)❌ NoMainActivity.ktSometimes❌ No❌ NoAndroidManifest.xmlSometimes❌ No❌ Noproguard-rules.proRarely⚠️ Needed for release❌ No.gradle/ folderNever✅ Yes✅ Yesbuild/ folderNever✅ Yes✅ YesgradlewNever❌ No❌ Nogradle-wrapper.propertiesRarely❌ No❌ No
+Common SDK Versions
+API LevelAndroid VersionRelease YearMarket Share215.0 Lollipop201499%+236.0 Marshmallow201598%+247.0 Nougat201696%+268.0 Oreo201795%+289.0 Pie201892%+2910201987%+3011202080%+3112202160%+3313202235%+3414202315%+
+Permission Categories
+PermissionCategoryAndroid VersionUser PromptINTERNETNormalAllNoVIBRATENormalAllNoACCESS_NETWORK_STATENormalAllNoCAMERADangerous6.0+YesLOCATIONDangerous6.0+YesSTORAGEDangerous6.0-12YesREAD_MEDIA_*Dangerous13+YesRECORD_AUDIODangerous6.0+YesREAD_CONTACTSDangerous6.0+YesPOST_NOTIFICATIONSDangerous13+YesBLUETOOTH_CONNECTDangerous12+Yes
+
+🎓 Learning Path for Beginners
+Week 1: Foundation
+
+✅ Understand project structure
+✅ Learn what each folder does
+✅ Identify which files to edit vs ignore
+
+Week 2: Build System
+
+✅ Master build.gradle files
+✅ Understand Gradle wrapper
+✅ Learn dependency management
+
+Week 3: Configuration
+
+✅ Configure AndroidManifest.xml
+✅ Add permissions
+✅ Setup deep linking
+
+Week 4: Native Code
+
+✅ Understand MainActivity.kt
+✅ Create method channels
+✅ Call native Android APIs
+
+Week 5: Release
+
+✅ Generate keystore
+✅ Configure ProGuard
+✅ Build signed APK/AAB
+
+Week 6: Debugging
+
+✅ Read error messages
+✅ Use Gradle commands
+✅ Fix common issues
+
+
+🎯 Best Practices Summary
+DO ✅
+
+Always backup keystore files
+
+bash   # Multiple backups!
+   cp upload-keystore.jks ~/Dropbox/keys/
+   cp upload-keystore.jks /secure-server/backups/
+
+Use version variables
+
+gradle   ext {
+       kotlin_version = '1.9.22'
+       compileSdk = 34
+       minSdk = 21
+   }
+```
+
+3. **Add to .gitignore**
+```
+   key.properties
+   *.jks
+   *.keystore
+   local.properties
+
+Test release builds
+
+bash   flutter build apk --release
+   # Test on real device!
+
+Keep ProGuard rules updated
+
+proguard   # Add rules as you add libraries
+   -keep class com.newlibrary.** { *; }
+DON'T ❌
+
+Never commit secrets
+
+bash   # BAD! Don't do this:
+   git add key.properties
+   git add upload-keystore.jks
+```
+
+2. **Don't ignore warnings**
+```
+   # This warning matters!
+   Warning: The minSdk version should not be declared in manifest...
+
+Don't use implementation everywhere
+
+gradle   # Use specific scopes
+   testImplementation 'junit:junit:4.13.2'
+   debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
+
+Don't skip ProGuard testing
+
+bash   # Always test release build before publishing!
+   flutter build apk --release
+   adb install build/app/outputs/flutter-apk/app-release.apk
+```
+
+5. **Don't manually edit generated files**
+```
+   ❌ BuildConfig.java
+   ❌ R.java
+   ❌ GeneratedPluginRegistrant.java
+```
+
+---
+
+## 🚀 Production Checklist
+
+Before releasing to Play Store:
+```
+✅ Updated version in pubspec.yaml
+✅ Updated versionCode and versionName in build.gradle
+✅ Tested release build on real devices
+✅ Verified ProGuard rules (app doesn't crash)
+✅ Checked APK size (< 100 MB recommended)
+✅ Removed debug logs from code
+✅ Updated app icon and splash screen
+✅ Configured proper permissions in AndroidManifest.xml
+✅ Added privacy policy (if collecting data)
+✅ Tested deep links / web links
+✅ Verified keystore backup exists
+✅ Tested on multiple Android versions
+✅ Checked for memory leaks
+✅ Optimized images and resources
+✅ Enabled R8 full mode
+✅ Generated signed AAB (not APK)
+
+📖 Additional Resources
+Official Documentation
+
+Android Developer Guide
+Gradle User Manual
+Flutter Android Setup
+ProGuard Manual
+
+Useful Tools
+
+Android Studio - IDE with visual tools
+APK Analyzer - Inspect APK contents
+Scrcpy - Mirror Android screen
+Vysor - Control Android from computer
+
+Community
+
+Stack Overflow - Q&A
+Flutter Discord - Real-time help
+Reddit r/FlutterDev - Discussions
+
+
+🎉 Conclusion
+You now have a complete understanding of every file in the Android folder!
+Remember:
+
+Gradle builds your app
+Manifest declares what your app needs
+MainActivity is the entry point
+ProGuard protects your code
+Keystore signs your app
+
+Next Steps:
+
+Explore the files in your own project
+Try modifying build.gradle to add a library
+Create a method channel in MainActivity.kt
+Generate a keystore and build a signed APK
+Configure ProGuard for a plugin
+
