@@ -1,0 +1,31 @@
+1. Why was the hidden state introduced? (Advanced Implementation)
+Before Flutter 3.13, we only had inactive and paused. The hidden state was introduced to handle multi-window environments (like Foldables, iPad split-view, or Desktop) and to provide a more granular buffer.
+
+The Problem: inactive on iOS could mean a simple notification shade pull-down, while paused meant the app was fully in the background.
+
+The Solution: hidden signifies the moment the app’s view is no longer being rendered by the engine, even if the process hasn't been fully "paused" by the OS. This allows developers to stop heavy GPU/UI tasks (like a high-refresh-rate game loop) without necessarily killing the network sockets or background logic too early.
+
+2. The Async Race Condition: How do you ensure data is saved?
+This is a classic "Senior" pitfall. When the app moves to paused, you have no guarantee how much time the OS will give you before the process is suspended.
+
+The Lead's Answer: Do not rely on onPause for heavy I/O.
+
+Strategy: Use a "Write-Ahead" or "Dirty Flag" strategy. Save data as the user interacts with the app (debounced), rather than waiting for the lifecycle event.
+
+Native solution: For critical data, use a platform channel to trigger a Background Task (WorkManager on Android / Background Tasks on iOS) which gives the OS a hint that you need a few extra seconds of execution time.
+
+3. Architecting a Global LifecycleService (System Design)
+Avoid putting lifecycle logic in your UI layer. Instead, use a Singleton or Provider-based Service.
+
+Implementation: Create a LifecycleService that implements WidgetsBindingObserver.
+
+Communication: Use a Stream or ValueNotifier.
+
+Benefit: Your ChatService can subscribe to the LifecycleService stream and disconnect the socket when the state becomes paused, completely independent of which screen the user is on.
+
+4. Handling the "OS Kill Switch" (State Restoration)
+The OS can kill your app in the background to reclaim RAM without calling onDetach.
+
+The Strategy: Use Flutter’s RestorationManager.
+
+How it works: You provide a restorationId to your MaterialApp and ScrollControllers. Flutter saves a "restoration bucket" to the native layer. If the OS kills the process and the user returns, Flutter passes that bucket back, allowing you to restore the scroll position and form data automatically.

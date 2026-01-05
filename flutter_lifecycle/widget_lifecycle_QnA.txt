@@ -1,0 +1,22 @@
+Q1: Why is it considered a "bad smell" to perform heavy logic or instantiate objects inside the build() method? Answer: The build() method is designed to be pure and idempotent. It can be called 60 to 120 times per second during an animation or several times during a single frame in development (hot reload). If you instantiate a TextEditingController or a Stream inside build(), you create a new instance every time the widget rebuilds, leading to memory leaks and broken logic.
+
+Lead's Rule: build() is for describing UI only. Any object that needs to persist across builds must be created in initState().
+
+Q2: If you have a widget that depends on MediaQuery.of(context), how does that affect the lifecycle of your widget when the user rotates the phone? Answer: Rotating the phone changes the screen dimensions, which updates the MediaQuery (an InheritedWidget). This triggers the didChangeDependencies() method, followed by build(). As a Lead, you should ensure that only the specific widgets needing those dimensions are listening to MediaQuery, otherwise, a phone rotation will trigger an expensive rebuild of the entire screen.
+
+Q3: Your code shows if (mounted) before calling setState(). Why is this absolutely critical in asynchronous operations? Answer: Async operations (like an API call) continue even if the user has navigated away and the widget has been "disposed." If the Future completes and calls setState() on a State object that is no longer in the tree, Flutter will throw a "setState() called after dispose()" error.
+
+The Nuance: As a Lead, you should also consider canceling the async task (or the Stream subscription) in dispose() rather than just checking mounted, to save CPU and network resources.
+
+Q4: What is the primary difference between deactivate() and dispose(), and when would you actually use deactivate()? Answer: * deactivate() is called when a widget is removed from the tree temporarily. It might be reinserted (e.g., using a GlobalKey to move a widget from one part of the tree to another in the same frame).
+
+dispose() is the permanent end of life.
+
+Practical Use: You rarely use deactivate(), but it’s useful for stopping a video or animation that might resume immediately if the widget is moved rather than destroyed.
+
+Q5: A child widget has a userId property. When the parent passes a new userId, initState() does not run again. How do you handle fetching new data for that new ID? Answer: This is where didUpdateWidget() is vital. Since the State object is reused when the widget configuration changes (if the runtime type and key are the same), initState() is skipped. You must compare oldWidget.userId with widget.userId inside didUpdateWidget(). If they differ, trigger the new data fetch.
+
+Phase 4: Lifecycle "Gotchas" (The Lead's Review)
+Q6: What happens if you call setState() inside initState()? Answer: It is technically redundant and logically incorrect. The framework calls build() automatically after initState() anyway. Calling setState() notifies the framework that the widget is "dirty" and needs a rebuild, but since it hasn't even built the first time, it’s unnecessary. Flutter will actually warn you or throw an error depending on the context.
+
+Q7: In your dispose() method example, you call super.dispose() at the very end. Why? Answer: It is a best practice to clean up your own resources (controllers, listeners, timers) before calling the parent’s cleanup logic. Once super.dispose() is called, the state object is effectively dead, and accessing properties might become unsafe.
